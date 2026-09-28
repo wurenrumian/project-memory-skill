@@ -20,7 +20,7 @@ description: 在项目根的 ./tmp/ 下维护开发与研究探索的项目记�
 
 ## 目录结构
 
-`./tmp/` 是这份记忆的唯一根。顶层（除 `scratch/` 外）受"不可随意删"约定保护，不要用 `git clean`、清理脚本或手工批量删除。
+`./tmp/` 是这份记忆的唯一根，**整个目录默认不进版本库**。顶层（除 `scratch/` 外）受"不可随意删"约定保护，不要用 `git clean`、清理脚本或手工批量删除。
 
 ```
 ./tmp/
@@ -37,7 +37,7 @@ description: 在项目根的 ./tmp/ 下维护开发与研究探索的项目记�
 │       ├── README.md    # 问题/假设/方法/结果/结论/未决
 │       ├── config.yaml  # 该实验固定参数
 │       └── scripts/     # 实验专属脚本（可复用时才提升到顶层 scripts/）
-├── outputs/             # 所有程序产物；内部结构自定，默认整个 gitignore
+├── outputs/             # 所有程序产物；内部结构自定
 ├── annotated/           # 需着重讲解 / 强调的代码
 ├── show/                # 给人展示 / 讲解的成品
 ├── scripts/             # 跨实验复用的工具
@@ -99,7 +99,7 @@ description: 在项目根的 ./tmp/ 下维护开发与研究探索的项目记�
 | 沉淀成文档 | 判类型 → `docs/{memory,research,plans}/`；按对应结构写，填全 front-matter，`status: stable`；`STATE.md`「关键链接」挂上；把来源 journal 的时间范围写进「来源」一节；相关实验 `README.md` 的「结论」同步更新 |
 | 毕业到项目 `./docs/` | **先问用户，不要擅自写项目 `docs/`**；同意后按项目 docs 自己的格式**重写**（不是复制 `./tmp/` 的排版）；`STATE.md` 记一行「已毕业：<tmp 路径> → <docs 路径>」；`./tmp/` 原件保留，`status` 标 `deprecated` 或移 `archive/` |
 | 收尾 | 更新 `STATE.md` 的「现在 / 进行中 / 下一步」，已完成的移走或移入 `archive/`；把当天 `journal/` 里散落的结论索引化（写进 `docs/` 或挂链接）；有实验完成 → 补 `README.md` 结论；遗留阻塞写进「待决 / 阻塞」 |
-| 归档 | 完成 / 废弃的实验：`experiments/EXP-XXXX-slug/` → `archive/EXP-XXXX-slug/`，对应产物一起移走或删（`outputs/` 整体默认不进版本库）；过时文档先 `status: deprecated`，确实无参考价值再移 `archive/` |
+| 归档 | 完成 / 废弃的实验：`experiments/EXP-XXXX-slug/` → `archive/EXP-XXXX-slug/`，对应产物一起移走或删；过时文档先 `status: deprecated`，确实无参考价值再移 `archive/` |
 
 ## 格式约定
 
@@ -236,23 +236,6 @@ related: [EXP-0001]
 ### 2. 项目 `.gitignore` 追加
 
 ```gitignore
-# ./tmp —— 过程性记忆，默认不进版本库
-/tmp/*
-# 持久部分：保留
-!/tmp/README.md
-!/tmp/STATE.md
-!/tmp/journal/
-!/tmp/docs/
-!/tmp/experiments/
-!/tmp/annotated/
-!/tmp/show/
-!/tmp/scripts/
-!/tmp/archive/
-# 产物：整个忽略（`outputs/` 就是往里放东西的地方）
-/tmp/outputs/
-# 草稿
-/tmp/scratch/
-
-# 若要版本化某个具体产物，用 `!` 单独放行，例如
-# !/tmp/outputs/EXP-0001/metrics.csv
+# ./tmp —— 过程性记忆，默认不进版本库（整个目录）
+/tmp/
 ```
