@@ -16,6 +16,67 @@ description: 在项目根的 ./tmp/ 下维护开发与研究探索的项目记�
 3. **捕获便宜，沉淀才排版。** 日常只往 `journal/` 追加一行；只有结论稳定了才写 `docs/`。不要边做边写文档。
 4. **产物不覆盖。** 程序产物写进 `outputs/`，内部结构由程序决定，skill 不限制；但别覆盖历史产物。
 5. **入口唯一。** 任何需要"了解现状"的场合，先读 `./tmp/STATE.md`，不要通读整个 `./tmp/`。
+6. **删除是最后手段。** 完成 / 废弃的东西移进 `archive/`，不删——记忆的价值常在"想起当初为什么放弃"。
+
+## 目录结构
+
+`./tmp/` 是这份记忆的唯一根。顶层（除 `scratch/` 外）受"不可随意删"约定保护，不要用 `git clean`、清理脚本或手工批量删除。
+
+```
+./tmp/
+├── README.md            # 这目录是什么、"顶层不可随意删"的约定、入口指引（人读一次）
+├── STATE.md             # 【必读】现在 / 进行中 / 下一步 / 待决 / 关键链接
+├── journal/
+│   └── 2026-09-27.md    # 追加式时间线，一天一个文件
+├── docs/                # 沉淀后的稳定内容
+│   ├── memory/          # 决策、架构、约定、踩过的坑
+│   ├── research/        # 研究讲解 / 分析长文 / 论文笔记
+│   └── plans/           # 方案草案、路线图、待验证想法
+├── experiments/         # 实验的「定义与结论」——小、稳定、人读
+│   └── EXP-0001-slug/
+│       ├── README.md    # 问题/假设/方法/结果/结论/未决
+│       ├── config.yaml  # 该实验固定参数
+│       └── scripts/     # 实验专属脚本（可复用时才提升到顶层 scripts/）
+├── outputs/             # 所有程序产物；内部结构自定，默认整个 gitignore
+├── annotated/           # 需着重讲解 / 强调的代码
+├── show/                # 给人展示 / 讲解的成品
+├── scripts/             # 跨实验复用的工具
+├── scratch/             # 真正的草稿，允许随时删
+└── archive/             # 完成 / 废弃的东西移到这里，不删
+```
+
+### 为什么产物独立于实验
+
+实验**定义**和运行**产物**生命周期相反：定义少、稳定、小、人读；产物多、只增、可能巨大、程序写。所以**产物写进固定的 `outputs/` 根，不写进 `experiments/`**——这样大文件集中可清理，归档实验时不会漏掉或误带一堆数据。
+
+`outputs/` 内部不设任何约定，由产生它的程序决定。代价是从产物反推属于哪个实验要另找线索，所以纪律放在写它的人这边：开实验 / 跑完时，在实验 `README.md` 或当天 `journal/` 记一行产物位置即可，别回头维护 `outputs/` 内部。
+
+## 写入协议
+
+默认**只追加 `journal/`**；只有结论稳定、以后还会被引用时，才升级到 `docs/`（门槛见下）。
+
+| 生命周期 | 什么时候 | 写到哪 | 装什么 · 不装什么 |
+|---|---|---|---|
+| 入口 | 会话收尾 | `STATE.md` | 现在 / 进行中 / 下一步 / 待决 / 关键链接；覆盖更新，<150 行；不装知识本身、细节 |
+| 入口 | 初始化一次 | `README.md` | 声明这是记忆、列目录与约定 |
+| 只增不改 | 任何"以后可能有用"的观察 / 想法 / 进展 | `journal/YYYY-MM-DD.md` | 一行一条，不排版；不装排版好的长文 |
+| 只增不改 | 程序产生产物 | `outputs/` | 内部结构自定；不覆盖历史产物 |
+| 只增不改 | 实验做完 / 想法废弃 | `archive/` | 移动，不删；不装仍在进行的工作 |
+| 少而稳定 | 开新实验 | `experiments/EXP-XXXX-slug/` | 定义与结论；不装运行产物 |
+| 少而稳定 | 工具第二次复用时 | `scripts/` | 跨实验复用的工具，不放单个实验专属脚本 |
+| 稳定后沉淀 | 一个决策 / 约定 / 架构 / 坑定下来 | `docs/memory/` | 背景 → 决定 → 理由与代价 → 来源 |
+| 稳定后沉淀 | 研究讲解 / 分析 / 论文笔记 | `docs/research/` | 一句话 → 正文 → 证据 → 未决 |
+| 稳定后沉淀 | 新方案 / 路线 / 待验证想法 | `docs/plans/` | 目标 → 方案 → 备选与取舍 → 验证方式 |
+| 稳定后沉淀 | 想讲清某段代码 | `annotated/<slug>(.md \| .<ext> \| /)` | 围绕代码讲；摘来的代码必记来源 |
+| 稳定后沉淀 | 准备演示 | `show/<slug>/` | 面向某个展示场合的成品 |
+| 可丢 | 随手草稿 | `scratch/` | 唯一可任意删除的区域 |
+
+**几条容易搞错的**：
+
+- **产物永不进 `experiments/`**，一律进 `outputs/`；内部怎么组织由程序决定。
+- **实验专属脚本放实验目录，被第二个实验复用时才提升到 `scripts/`。**
+- **`annotated/` 里的代码要记来源**（原文件路径 + commit/日期），否则会悄悄和真实源码漂移；摘来的是副本不是真源，改动请回项目源码。
+- **`docs/`、`annotated/`、`show/` 按"读者在什么状态读"区分**：`docs/` 是随时查的参考，`annotated/` 是围着代码讲实现，`show/` 是在一个展示场合讲给他人听。拿不准就问"这东西是给谁、在什么场合用的"。
 
 ## 冷启动协议
 
@@ -26,51 +87,172 @@ description: 在项目根的 ./tmp/ 下维护开发与研究探索的项目记�
 3. 按 `STATE.md` 的「关键链接」按需读对应 `docs/` 文档或 `experiments/*/README.md`。
 4. 只在必要时才深入 `outputs/`。
 
-## 写入协议
+## 常用操作
 
-| 情况 | 动作 | 位置 |
+| 任务 | 动作 |
+|---|---|
+| 初始化 | 见下「初始化材料」；`README.md` 逐字落盘；`.gitignore` 追加（先看是否已有 `tmp` 规则）；告知用户已建好、`scratch/` 可随意删、其余顶层不可删 |
+| 开新实验 | 扫 `experiments/` 与 `archive/` 取下一个 `EXP-XXXX`；建 `experiments/EXP-XXXX-slug/{README.md,config.yaml,scripts/}`（**不建产物目录**）；`README.md` 先填到「方法」，结论留空跑完再补；`STATE.md`「进行中」加一行，当天 journal 记一行 |
+| 跑脚本 / 记产物 | 产物写 `outputs/`，不覆盖；在实验 `README.md`「运行记录」或当天 `journal/` 记一行产物位置 |
+| 写代码讲解 | 见「各类文件的结构」的 `annotated/` 段；记好来源 |
+| 做展示材料 | 建 `show/<slug>/`；放成品，必要时加 `README.md` 说明给谁看、怎么看 |
+| 沉淀成文档 | 判类型 → `docs/{memory,research,plans}/`；按对应结构写，填全 front-matter，`status: stable`；`STATE.md`「关键链接」挂上；把来源 journal 的时间范围写进「来源」一节；相关实验 `README.md` 的「结论」同步更新 |
+| 毕业到项目 `./docs/` | **先问用户，不要擅自写项目 `docs/`**；同意后按项目 docs 自己的格式**重写**（不是复制 `./tmp/` 的排版）；`STATE.md` 记一行「已毕业：<tmp 路径> → <docs 路径>」；`./tmp/` 原件保留，`status` 标 `deprecated` 或移 `archive/` |
+| 收尾 | 更新 `STATE.md` 的「现在 / 进行中 / 下一步」，已完成的移走或移入 `archive/`；把当天 `journal/` 里散落的结论索引化（写进 `docs/` 或挂链接）；有实验完成 → 补 `README.md` 结论；遗留阻塞写进「待决 / 阻塞」 |
+| 归档 | 完成 / 废弃的实验：`experiments/EXP-XXXX-slug/` → `archive/EXP-XXXX-slug/`，对应产物一起移走或删（`outputs/` 整体默认不进版本库）；过时文档先 `status: deprecated`，确实无参考价值再移 `archive/` |
+
+## 格式约定
+
+- **时间戳**：journal 文件名 `YYYY-MM-DD.md`；文档 front-matter 日期 `YYYY-MM-DD`；行内时间 `HH:MM`。用本地时间。
+- **实验 ID**：格式 `EXP-0001`，**四位零填充、单调递增、永不复用**（即使实验被归档）。目录名 `EXP-0001-<slug>`，slug 为小写 kebab-case、≤5 个词、能望文生义。新建时扫描 `experiments/` 取当前最大编号 +1，同时检查 `archive/`，避免复用编号。
+- **文件命名**：文档用英文 kebab-case（`storage-latency-model.md`）；标题可以中文，文件名保持可跨平台稳定。
+- **`outputs/`**：内部结构不设约定，也不要求自带元数据；唯一要求是在实验 `README.md` 或当天 `journal/` 记一行产物位置。
+
+### 各类文件的结构
+
+结构的价值是**扫一眼就知道去哪找**。字段名不硬性，但小节顺序和存在的小节尽量保持。
+
+`STATE.md`（覆盖式更新，<150 行）：`## 现在` → `## 进行中` → `## 下一步` → `## 待决 / 阻塞` → `## 关键链接` → `## 已毕业`。
+
+实验 `README.md`：`状态` → `问题` → `假设` → `方法` → `结果` → `结论` → `未决` → `运行记录`（表格，每行指向 `outputs/` 里的实际产物位置）。初期只填到「方法」，跑完再补结论——先开张。
+
+`docs/` 文档：`memory` = 背景 → 决定 → 理由与代价 → 来源；`research` = 一句话 → 正文 → 证据 → 未决；`plan` = 目标 → 方案 → 备选 / 取舍 → 验证方式。
+
+`annotated/<topic-slug>`：形态不限，按内容挑最省事的——`<slug>.md` 纯讲解（代码用代码块嵌在文档里）、`<slug>.<ext>` 带注释的源码片段（注释本身是讲解）、`<slug>/` 主题目录（讲解与代码各一份，或加几个变体 / diff）。**唯一硬要求**：从项目源码摘来的代码记来源（原文件路径 + commit/日期），放文件顶部或同目录 README。
+
+`show/<topic-slug>/`：`README.md`（给谁看、什么时候、怎么看；可选但推荐）+ 成品（slides / 图 / demo 脚本 / 一页纸 / html）。
+
+### 文档 front-matter
+
+所有 `docs/**/*.md` 必带：
+
+```yaml
+---
+title: 标题
+type: memory | research | plan
+status: draft | stable | deprecated
+created: 2026-09-27
+updated: 2026-09-27
+tags: []
+related: [EXP-0001]
+---
+```
+
+`status` 从 `draft` 起步，内容稳定后改 `stable`，过时改 `deprecated`（不直接删）。`related` 用实验 ID 或相对路径，串起"哪些实验产生了这篇结论"。
+
+### journal 条目
+
+```markdown
+- 15:30 做了什么 / 观察到什么 / 为什么
+```
+
+一行一条，不要求完整句子，不要求排版；一个文件对应一天，跨天就新建文件；只追加，不回头整理。
+
+### `docs/` 的门槛
+
+`docs/` 和 `scratch/` 的区别不是"沉淀程度"，而是**你想不想留**：
+
+| | 想留吗 | 组织方式 | 时间性 |
+|---|---|---|---|
+| `scratch/` | 不想（丢了不心疼） | 无 | 当下草稿 |
+| `journal/` | 想留（作为**记录**） | 无，按时间 | 强——"哪天发生的" |
+| `docs/` | 想留（作为**知识**） | 有，按主题 | 弱——与时间脱钩 |
+
+进 `docs/` 要同时满足两点：① **时间脱钩**——不知道当时上下文也读得懂，不是流水账；② **有人会来查**——未来的某个决定 / 实验会回头指向它。成熟度用 `status: draft → stable` 表达，**不必等到完全定论**。拿不准就先留 `journal/`。
+
+### 产物元数据（可选）
+
+`outputs/` 内部不设约定，产物要不要自带来源由程序决定。若希望产物能自证出处，可让程序自己写一份：
+
+```json
+{
+  "experiment": "EXP-0001",
+  "command": "python scripts/run.py --config config.yaml",
+  "started_at": "2026-09-27T15:30:12+08:00",
+  "duration_s": 123.4,
+  "git": { "rev": "abc1234", "dirty": true },
+  "inputs": ["config.yaml"],
+  "artifacts": [{ "path": "metrics.csv", "bytes": 2048 }],
+  "status": "ok"
+}
+```
+
+`status` 建议记 `ok | failed | interrupted`——失败 / 中断的产物同样值得留。
+
+### 链接与引用
+
+文档之间用相对路径链接，保证在编辑器 / 渲染器里可点。结论指向证据：`docs/` 里引用 `outputs/` 中的实际路径，而不是复制粘贴数字。
+
+## 初始化材料（逐字落盘）
+
+项目里第一次使用、且项目根没有 `./tmp/STATE.md` 时：先确认当前目录是项目根（`./tmp/` 应建在这里，不是子目录），按上面的目录结构建好各目录，然后把下面两段**原样落盘**（不是可随意改写的建议）。
+
+### 1. `./tmp/README.md`
+
+```markdown
+# ./tmp — 项目过程性记忆
+
+> **这个目录不是临时垃圾。** 顶层内容（除 `scratch/` 外）是开发与研究探索的过程记忆，**不要用 `git clean`、清理脚本或手工批量删除**。
+> 只有 `scratch/` 可以随时删除。
+
+## 这是什么
+
+- 探索中的、失败的、临时的、还没定论的东西都在这里。
+- 项目正式文档在 `./docs/`；本目录只保存"过程"。只有稳定且对项目有价值的结论才"毕业"到 `./docs/`。
+
+## 先看哪里
+
+1. `STATE.md` — 当前状态与下一步（唯一入口）
+2. `journal/` — 最近的原始记录
+3. 其余按需：`docs/`、`experiments/*/README.md`
+
+## 目录
+
+| 目录 | 用途 | 可删？ |
 |---|---|---|
-| 任何"以后可能有用"的观察 / 想法 / 进展 | 追加一行 | `journal/YYYY-MM-DD.md` |
-| 一个决策、约定、架构、坑定下来了 | 写一篇 | `docs/memory/` |
-| 写完研究讲解 / 分析 / 论文笔记 | 写一篇 | `docs/research/` |
-| 有新方案 / 路线 / 待验证想法 | 写一篇 | `docs/plans/` |
-| 开新实验 | 建目录 | `experiments/EXP-XXXX-slug/` |
-| 程序产生产物 | 往 `outputs/` 写，并在实验或 journal 记一行位置 | `outputs/`（内部自定） |
-| 写下代码讲解 / 带注释的源码 | 建文件或主题目录 | `annotated/<topic-slug>(.md | /)` |
-| 做要展示/讲给他人的成品 | 建主题目录 | `show/<topic-slug>/` |
-| 会话收尾 / 换任务 | 更新 STATE | `STATE.md` |
-| 实验做完 / 想法废弃 | 移动，不删 | `archive/` |
+| `STATE.md` | 现状 / 进行中 / 下一步 / 待决 / 关键链接 | 否 |
+| `journal/` | 追加式时间线 | 否 |
+| `docs/{memory,research,plans}/` | 沉淀后的稳定内容 | 否 |
+| `experiments/` | 实验的定义与结论（不含产物） | 否 |
+| `outputs/` | 程序产物（内部结构自定） | 否 |
+| `annotated/` | 代码讲解与带注释的源码片段 | 否 |
+| `show/` | 给人展示/讲解的成品 | 否 |
+| `scripts/` | 跨实验复用的工具 | 否 |
+| `archive/` | 完成 / 废弃的东西 | 否 |
+| `scratch/` | 草稿、一次性文件 | **可以** |
 
-> **产物永远不写进 `experiments/`，一律进 `outputs/`。** 内部结构由程序决定，但要在实验 `README.md` 或 journal 记一行产物位置。实验定义与运行产物生命周期相反，必须分开（理由见 `references/layout.md`）。
+## 脚本输出约定
 
-**默认只追加 journal。** 升级到 `docs/` 的前提是内容已稳定、以后还会被引用（门槛见 `references/conventions.md`）。写之前先看该文件里对应的结构约定。
+- 程序产物统一写 `outputs/`，内部结构由程序决定，不设约定。
+- 跑完在实验 `README.md` 或 `journal/` 记一行产物位置。
 
-## 初始化
+## 约定
 
-项目里第一次使用，把骨架铺到项目根 `./tmp/`：
-
-```
-./tmp/README.md            <- references/bootstrap.md 第 1 段（逐字）
-./tmp/STATE.md             <- references/conventions.md「STATE.md」结构
-./tmp/journal/
-./tmp/docs/memory/  ./tmp/docs/research/  ./tmp/docs/plans/
-./tmp/experiments/  ./tmp/outputs/  ./tmp/annotated/  ./tmp/show/
-./tmp/scripts/  ./tmp/scratch/  ./tmp/archive/
+- 结果不可变：每次运行独立目录，不覆盖历史。
+- 只追加 journal，不回头整理；稳定了才写 `docs/`。
+- 详细规则见 project-memory skill。
 ```
 
-项目 `.gitignore` 按 `references/bootstrap.md` 第 2 段追加。完整定义见 `references/layout.md`。
+### 2. 项目 `.gitignore` 追加
 
-## 收尾协议
+```gitignore
+# ./tmp —— 过程性记忆，默认不进版本库
+/tmp/*
+# 持久部分：保留
+!/tmp/README.md
+!/tmp/STATE.md
+!/tmp/journal/
+!/tmp/docs/
+!/tmp/experiments/
+!/tmp/annotated/
+!/tmp/show/
+!/tmp/scripts/
+!/tmp/archive/
+# 产物：整个忽略（`outputs/` 就是往里放东西的地方）
+/tmp/outputs/
+# 草稿
+/tmp/scratch/
 
-一次会话 / 一段工作结束时：
-
-1. 更新 `STATE.md` 的「现在 / 进行中 / 下一步」，已完成的移走或移入 `archive/`。
-2. 把当天 `journal/` 里散落的结论**索引化**：写进 `docs/`，或在 `STATE.md` 挂链接。
-3. 若某个结论已稳定且对项目有价值 → **提议**"毕业"到 `./docs/`（先问用户，不要擅自改项目 docs）。
-
-## 详细定义
-
-- 目录结构：`references/layout.md`
-- 命名 / 元数据 / 时间戳 / 各类文件结构：`references/conventions.md`
-- 逐步流程（初始化、建实验、记录 run、沉淀、毕业、归档）：`references/workflows.md`
-- 初始化材料（逐字落盘）：`references/bootstrap.md`
+# 若要版本化某个具体产物，用 `!` 单独放行，例如
+# !/tmp/outputs/EXP-0001/metrics.csv
+```
