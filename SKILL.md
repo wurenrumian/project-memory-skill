@@ -1,6 +1,6 @@
 ---
 name: project-memory
-description: 在项目根的 ./tmp/ 下维护开发与研究探索的项目记忆、实验记录与状态（项目记忆、研究讲解、脚本、实验记录、实验结果、当前状态与后续方向）。当用户要"记录一下/记一下这个结论/维护项目状态/当前进度/下一步/研究记录/实验记录/开个实验/记录实验结果/整理探索笔记/这些先别放进 docs"，或提到 project memory、journal、experiment run 时使用。Maintain project memory, research notes, experiment records and current state under ./tmp/.
+description: 在项目根的 ./tmp/ 下维护开发与研究探索的项目记忆、实验记录与状态（项目记忆、研究讲解、脚本、实验记录、实验结果、当前状态与后续方向）。当用户要"记录一下/记一下这个结论/维护项目状态/当前进度/下一步/研究记录/实验记录/开个实验/记录实验结果/整理探索笔记/这些先别放进 docs"，或提到 project memory、journal、experiment run、多 agent 协作时使用。Maintain project memory, research notes, experiment records and current state under ./tmp/.
 ---
 
 # Project Memory
@@ -18,6 +18,7 @@ description: 在项目根的 ./tmp/ 下维护开发与研究探索的项目记�
 5. **入口唯一。** 任何需要"了解现状"的场合，先读 `./tmp/STATE.md`，不要通读整个 `./tmp/`。
 6. **删除是最后手段。** 完成 / 废弃的东西移进 `archive/`，不删——记忆的价值常在"想起当初为什么放弃"。
 7. **初始化是惰性的。** 只读不建任何东西；第一次**写入**时才落最小集合（`.gitignore` 规则、`README.md`、`STATE.md`），其余目录用到哪个建哪个。
+8. **多 agent 只动自己的地盘。** 多个 agent 并行干活才开 `agents/`：任务上 `agents/BOARD.md` 认领（认领即锁），进展写自己的 `agents/<agent-id>/`；全局 `STATE.md` 只在收尾时汇总。
 
 ## 目录结构
 
@@ -31,10 +32,10 @@ description: 在项目根的 ./tmp/ 下维护开发与研究探索的项目记�
 ├── STATE.md             # 【必读】现在 / 进行中 / 下一步 / 待决 / 关键链接
 ├── journal/
 │   └── 2026-09-27.md    # 追加式时间线，一天一个文件
-├── docs/                # 沉淀后的稳定内容
+├── docs/                # 沉淀后的稳定内容；演示材料等也放这，形式自由
 │   ├── memory/          # 决策、架构、约定、踩过的坑
 │   ├── research/        # 研究讲解 / 分析长文 / 论文笔记
-│   └── plans/           # 方案草案、路线图、待验证想法
+│   └── plans/           # 不动手验证的方案、路线图、想法（动手验证就开实验）
 ├── experiments/         # 实验的「定义与结论」——小、稳定、人读
 │   └── EXP-0001-slug/
 │       ├── README.md    # 问题/假设/方法/结果/结论/未决
@@ -42,7 +43,7 @@ description: 在项目根的 ./tmp/ 下维护开发与研究探索的项目记�
 │       └── scripts/     # 实验专属脚本（可复用时才提升到顶层 scripts/）
 ├── outputs/             # 所有程序产物；内部结构自定
 ├── annotated/           # 需着重讲解 / 强调的代码
-├── show/                # 给人展示 / 讲解的成品
+├── agents/              # 多 agent 协作：BOARD.md 任务板 + 各 agent 子目录（并行干活才建）
 ├── scripts/             # 跨实验复用的工具
 ├── scratch/             # 真正的草稿，允许随时删
 └── archive/             # 完成 / 废弃的东西移到这里，不删
@@ -52,7 +53,7 @@ description: 在项目根的 ./tmp/ 下维护开发与研究探索的项目记�
 
 实验**定义**和运行**产物**生命周期相反：定义少、稳定、小、人读；产物多、只增、可能巨大、程序写。所以**产物写进固定的 `outputs/` 根，不写进 `experiments/`**——这样大文件集中可清理，归档实验时不会漏掉或误带一堆数据。
 
-`outputs/` 内部不设任何约定，由产生它的程序决定。代价是从产物反推属于哪个实验要另找线索，所以纪律放在写它的人这边：开实验 / 跑完时，在实验 `README.md` 或当天 `journal/` 记一行产物位置即可，别回头维护 `outputs/` 内部。
+`outputs/` 内部不设任何约定，由产生它的程序决定。代价是从产物反推属于哪个实验要另找线索，所以纪律放在写它的人这边：产物位置**记一个地方**——有归属实验的记进实验 `README.md`「运行记录」，没归属的记当天 `journal/`，不要两处都记，也别一处都不记。
 
 ## 写入协议
 
@@ -69,9 +70,9 @@ description: 在项目根的 ./tmp/ 下维护开发与研究探索的项目记�
 | 少而稳定 | 工具第二次复用时 | `scripts/` | 跨实验复用的工具，不放单个实验专属脚本 |
 | 稳定后沉淀 | 一个决策 / 约定 / 架构 / 坑定下来 | `docs/memory/` | 背景 → 决定 → 理由与代价 → 来源 |
 | 稳定后沉淀 | 研究讲解 / 分析 / 论文笔记 | `docs/research/` | 一句话 → 正文 → 证据 → 未决 |
-| 稳定后沉淀 | 新方案 / 路线 / 待验证想法 | `docs/plans/` | 目标 → 方案 → 备选与取舍 → 验证方式 |
+| 稳定后沉淀 | 不动手验证的新方案 / 路线图 / 想法 | `docs/plans/` | 目标 → 方案 → 备选与取舍 → 验证方式；动手验证就开实验 |
 | 稳定后沉淀 | 想讲清某段代码 | `annotated/<slug>(.md \| .<ext> \| /)` | 围绕代码讲；摘来的代码必记来源 |
-| 稳定后沉淀 | 准备演示 | `show/<slug>/` | 面向某个展示场合的成品 |
+| 并行协作 | 多个 agent 同时干活 | `agents/` | 任务在 `agents/BOARD.md` 认领（认领即锁）；进展写各自子目录；不装单 agent 工作流 |
 | 可丢 | 随手草稿 | `scratch/` | 唯一可任意删除的区域 |
 
 **几条容易搞错的**：
@@ -79,7 +80,7 @@ description: 在项目根的 ./tmp/ 下维护开发与研究探索的项目记�
 - **产物永不进 `experiments/`**，一律进 `outputs/`；内部怎么组织由程序决定。
 - **实验专属脚本放实验目录，被第二个实验复用时才提升到 `scripts/`。**
 - **`annotated/` 里的代码要记来源**（原文件路径 + commit/日期），否则会悄悄和真实源码漂移；摘来的是副本不是真源，改动请回项目源码。
-- **`docs/`、`annotated/`、`show/` 按"读者在什么状态读"区分**：`docs/` 是随时查的参考，`annotated/` 是围着代码讲实现，`show/` 是在一个展示场合讲给他人听。拿不准就问"这东西是给谁、在什么场合用的"。
+- **`docs/` 与 `annotated/` 按"读者在什么状态读"区分**：`docs/` 是随时查的参考（演示材料、成品、讲稿也都放这），`annotated/` 是围着代码讲实现。拿不准就问"这东西是给谁、在什么场合用的"。
 
 ## 冷启动协议
 
@@ -87,7 +88,7 @@ description: 在项目根的 ./tmp/ 下维护开发与研究探索的项目记�
 
 1. 读 `./tmp/STATE.md`。不存在说明还没有任何记忆，按空状态继续——**只读不初始化**。
 2. 读最新一个 `./tmp/journal/*.md` 的尾部。
-3. 按 `STATE.md` 的「关键链接」按需读对应 `docs/` 文档或 `experiments/*/README.md`。
+3. 按 `STATE.md` 的「关键链接」按需读对应 `docs/` 文档或 `experiments/*/README.md`；存在 `./tmp/agents/` 时顺带看一眼 `agents/BOARD.md` 的认领情况。
 4. 只在必要时才深入 `outputs/`。
 
 ## 常用操作
@@ -95,21 +96,49 @@ description: 在项目根的 ./tmp/ 下维护开发与研究探索的项目记�
 | 任务 | 动作 |
 |---|---|
 | 首次写入（惰性初始化） | 第一次往 `./tmp/` 写东西时自动触发，见下「惰性初始化」；`.gitignore` 追加（先看是否已有 `tmp` 规则）→ `README.md` 逐字落盘 → `STATE.md` 落最小骨架；**其余目录用到再建**；建好后告知用户、`scratch/` 可随意删、其余顶层不可删 |
-| 开新实验 | 扫 `experiments/` 与 `archive/` 取下一个 `EXP-XXXX`；建 `experiments/EXP-XXXX-slug/{README.md,config.yaml,scripts/}`（**不建产物目录**）；`README.md` 先填到「方法」，结论留空跑完再补；`STATE.md`「进行中」加一行，当天 journal 记一行 |
-| 跑脚本 / 记产物 | 产物写 `outputs/`，不覆盖；在实验 `README.md`「运行记录」或当天 `journal/` 记一行产物位置 |
+| 开新实验 | 扫 `experiments/` 与 `archive/` 取下一个 `EXP-XXXX`；建 `experiments/EXP-XXXX-slug/{README.md,config.yaml,scripts/}`（**不建产物目录**）；`README.md` 先填到「方法」，结论留空跑完再补；`STATE.md`「进行中」加一行，当天 journal 记一行（多 agent 时中途只记 BOARD 与自己的 journal，收尾写回 STATE） |
+| 跑脚本 / 记产物 | 产物写 `outputs/`，不覆盖；位置记**一处**：有归属实验记实验 `README.md`「运行记录」，没归属记当天 `journal/` |
 | 写代码讲解 | 见「各类文件的结构」的 `annotated/` 段；记好来源 |
-| 做展示材料 | 建 `show/<slug>/`；放成品，必要时加 `README.md` 说明给谁看、怎么看 |
-| 沉淀成文档 | 判类型 → `docs/{memory,research,plans}/`；按对应结构写，填全 front-matter，`status: stable`；`STATE.md`「关键链接」挂上；把来源 journal 的时间范围写进「来源」一节；相关实验 `README.md` 的「结论」同步更新 |
+| 多 agent 协作 | 并行干活才用：建 `agents/` 与 `BOARD.md`（见「多 agent 协作」段）；各自认领后建自己的 `agents/<agent-id>/` |
+| 沉淀成文档 | 判类型 → `docs/{memory,research,plans}/`；按对应结构写，填全 front-matter（已定稿 `status: stable`，仍在演化的标 `draft`）；`STATE.md`「关键链接」挂上；把来源 journal 的时间范围写进「来源」一节；相关实验 `README.md` 的「结论」同步更新 |
 | 毕业到项目 `./docs/` | **先问用户，不要擅自写项目 `docs/`**；同意后按项目 docs 自己的格式**重写**（不是复制 `./tmp/` 的排版）；`STATE.md` 记一行「已毕业：<tmp 路径> → <docs 路径>」；`./tmp/` 原件保留，`status` 标 `deprecated` 或移 `archive/` |
 | 收尾 | 更新 `STATE.md` 的「现在 / 进行中 / 下一步」，已完成的移走或移入 `archive/`；把当天 `journal/` 里散落的结论索引化（写进 `docs/` 或挂链接）；有实验完成 → 补 `README.md` 结论；遗留阻塞写进「待决 / 阻塞」 |
 | 归档 | 完成 / 废弃的实验：`experiments/EXP-XXXX-slug/` → `archive/EXP-XXXX-slug/`，对应产物一起移走或删；过时文档先 `status: deprecated`，确实无参考价值再移 `archive/` |
+
+## 多 agent 协作
+
+多个 agent **同时**在同一个项目里干活才启用；单 agent 时整个 `agents/` 目录不存在。根 `STATE.md` 仍是唯一入口，全局视角不碎成 N 份。本节与「常用操作」的默认流程冲突时，以本节为准：工作期间的状态只进 BOARD 与自己的子目录，全局文件只在收尾写回。（若各 agent 在各自的 git worktree 里，`./tmp/` 互不共享，本节约定不适用。）
+
+```
+./tmp/agents/
+├── BOARD.md           # 共享任务板：任务 / 认领人 / 状态 / 产物链接
+└── <agent-id>/        # 每个 agent 一份（id 认法见规则 1）
+    ├── STATE.md       # 该 agent 自己的现状 / 下一步
+    └── journal/       # 该 agent 自己的时间线，一天一个文件（约定同全局 journal）
+        └── 2026-10-12.md
+```
+
+`BOARD.md` 一行一条（任务或文件占用都算）：
+
+| 任务 / 占用 | 认领人 | 状态 | 产物 / 备注 |
+|---|---|---|---|
+| EXP-0003 结果分析 | claude-1 | 进行中 | outputs/exp-0003/ |
+| 编辑 `docs/memory/缓存策略.md` | codex-2 | 占用中 | 完成即释放 |
+
+规则：
+
+1. **先认 id，再认任务。** agent-id 优先用用户或环境指定的名字；同名 agent 多会话并发时加序号（`claude-1`、`claude-2`）。建目录前先扫 `agents/`，不撞名。
+2. **认领即锁。** 接任务，或要动 `docs/`、`experiments/` 等共享区的某个文件，先往 `BOARD.md` 加/改一行登记；完成的行标 `done`，别人的行不动。
+3. **只写自己的地盘。** 每个 agent 只写自己的 `agents/<agent-id>/` 和 BOARD 里自己那几行；根 `STATE.md` 和全局 `journal/` 工作期间不动。
+4. **收尾写回全局。** 会话收尾时，把"值得全局知道"的一句话写进根 `STATE.md`（现在/进行中/下一步），细节留在自己子目录。
+5. **BOARD 只放状态和链接**，不放任务详情——详情放任务自己的文档或 journal，BOARD 一行链过去。
 
 ## 格式约定
 
 - **时间戳**：journal 文件名 `YYYY-MM-DD.md`；文档 front-matter 日期 `YYYY-MM-DD`；行内时间 `HH:MM`。用本地时间。
 - **实验 ID**：格式 `EXP-0001`，**四位零填充、单调递增、永不复用**（即使实验被归档）。目录名 `EXP-0001-<slug>`，slug 为小写 kebab-case、≤5 个词、能望文生义。新建时扫描 `experiments/` 取当前最大编号 +1，同时检查 `archive/`，避免复用编号。
 - **文件命名**：文档用英文 kebab-case（`storage-latency-model.md`）；标题可以中文，文件名保持可跨平台稳定。
-- **`outputs/`**：内部结构不设约定，也不要求自带元数据；唯一要求是在实验 `README.md` 或当天 `journal/` 记一行产物位置。
+- **`outputs/`**：内部结构不设约定，也不要求自带元数据；唯一要求是把产物位置记在**一处**——有归属实验记实验 `README.md`「运行记录」，没归属记当天 `journal/`。
 
 ### 各类文件的结构
 
@@ -123,7 +152,7 @@ description: 在项目根的 ./tmp/ 下维护开发与研究探索的项目记�
 
 `annotated/<topic-slug>`：形态不限，按内容挑最省事的——`<slug>.md` 纯讲解（代码用代码块嵌在文档里）、`<slug>.<ext>` 带注释的源码片段（注释本身是讲解）、`<slug>/` 主题目录（讲解与代码各一份，或加几个变体 / diff）。**唯一硬要求**：从项目源码摘来的代码记来源（原文件路径 + commit/日期），放文件顶部或同目录 README。
 
-`show/<topic-slug>/`：`README.md`（给谁看、什么时候、怎么看；可选但推荐）+ 成品（slides / 图 / demo 脚本 / 一页纸 / html）。
+`docs/` 里的演示类内容没有独立形态要求——slides、一页纸、demo 脚本、html 成品直接放对应文档旁或同目录 `assets/`，要不要配 `README.md` 说明给谁看也随意；`docs/` 只沉淀稳定的结论与成品，形式自由。
 
 ### 文档 front-matter
 
@@ -132,7 +161,7 @@ description: 在项目根的 ./tmp/ 下维护开发与研究探索的项目记�
 ```yaml
 ---
 title: 标题
-type: memory | research | plan
+type: memory | research | plan      # 主类型；演示等自由形态的内容填实际形态即可
 status: draft | stable | deprecated
 created: 2026-09-27
 updated: 2026-09-27
@@ -217,7 +246,7 @@ related: [EXP-0001]
 
 1. `STATE.md` — 当前状态与下一步（唯一入口）
 2. `journal/` — 最近的原始记录
-3. 其余按需：`docs/`、`experiments/*/README.md`
+3. 其余按需：`docs/`、`experiments/*/README.md`、多 agent 时的 `agents/BOARD.md`
 
 ## 目录
 
@@ -229,7 +258,7 @@ related: [EXP-0001]
 | `experiments/` | 实验的定义与结论（不含产物） | 否 |
 | `outputs/` | 程序产物（内部结构自定） | 否 |
 | `annotated/` | 代码讲解与带注释的源码片段 | 否 |
-| `show/` | 给人展示/讲解的成品 | 否 |
+| `agents/` | 多 agent 协作：BOARD.md 任务板 + 各 agent 子目录 | 否 |
 | `scripts/` | 跨实验复用的工具 | 否 |
 | `archive/` | 完成 / 废弃的东西 | 否 |
 | `scratch/` | 草稿、一次性文件 | **可以** |
@@ -239,12 +268,13 @@ related: [EXP-0001]
 ## 脚本输出约定
 
 - 程序产物统一写 `outputs/`，内部结构由程序决定，不设约定。
-- 跑完在实验 `README.md` 或 `journal/` 记一行产物位置。
+- 跑完把产物位置记在一处：有归属实验记实验 `README.md`「运行记录」，没归属记当天 `journal/`。
 
 ## 约定
 
 - 结果不可变：每次运行独立目录，不覆盖历史。
 - 只追加 journal，不回头整理；稳定了才写 `docs/`。
+- 多 agent 并行时启用 `agents/`：任务上 `BOARD.md` 认领，进展写各自 `agents/<agent-id>/`，全局 `STATE.md` 只在收尾时更新。
 - 详细规则见 project-memory skill。
 ```
 
