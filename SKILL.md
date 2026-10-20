@@ -1,28 +1,28 @@
 ---
 name: project-memory
-description: 在项目根的 ./tmp/ 下维护开发与研究探索的项目记忆、实验记录与状态（项目记忆、研究讲解、脚本、实验记录、实验结果、当前状态与后续方向）。当用户要"记录一下/记一下这个结论/维护项目状态/当前进度/下一步/研究记录/实验记录/开个实验/记录实验结果/整理探索笔记/这些先别放进 docs"，或提到 project memory、journal、experiment run、多 agent 协作时使用。Maintain project memory, research notes, experiment records and current state under ./tmp/.
+description: 在项目根的 ./tmp/ 下维护项目记忆、实验记录与当前状态（过程进 ./tmp/，结论进 ./docs/）。当用户要记录一下、记个结论、维护项目状态 / 当前进度 / 下一步、写研究记录或实验记录、整理探索笔记、这些先别放进 docs，或提到 project memory、journal、experiment run、多 agent 协作时使用。Maintain project memory, research notes, experiment records and current state under ./tmp/.
 ---
 
 # Project Memory
 
 在项目根的 `./tmp/` 下维护一份**过程性记忆**：项目记忆、研究讲解、脚本、实验记录、实验结果、当前状态与后续方向。
 
-它**不是**项目文档。`./docs/` 是给项目读者的结论，`./tmp/` 是产生这些结论的过程。
+它**不是**项目文档，也**不是**随时可清的临时目录：`./docs/` 是给项目读者的结论，`./tmp/` 是产生这些结论的过程，里面有失败的、没定论的、以及"当初为什么放弃"的记录。
 
 ## 核心规则
 
 1. **`./tmp/` 只放过程，项目 `./docs/` 只放结论。** 探索中的、失败的、临时的、还没定论的内容一律进 `./tmp/`；只有稳定且对项目有价值的内容才"毕业"到 `./docs/`，并在 `STATE.md` 记一笔。
 2. **实验定义与运行产物分开。** 定义在 `experiments/`（小、稳定、人读），产物在 `outputs/`（多、只增、程序写）。
 3. **捕获便宜，沉淀才排版。** 日常只往 `journal/` 追加一行；只有结论稳定了才写 `docs/`。不要边做边写文档。
-4. **产物不覆盖。** 程序产物写进 `outputs/`，内部结构由程序决定，skill 不限制；但别覆盖历史产物。
+4. **产物不覆盖。** 每次运行写独立目录，程序产物进 `outputs/`，内部结构由程序决定，skill 不限制；但别覆盖历史产物。
 5. **入口唯一。** 任何需要"了解现状"的场合，先读 `./tmp/STATE.md`，不要通读整个 `./tmp/`。
-6. **删除是最后手段。** 完成 / 废弃的东西移进 `archive/`，不删——记忆的价值常在"想起当初为什么放弃"。
+6. **删除是最后手段。** 顶层（除 `scratch/` 外）**不要用 `git clean`、清理脚本或手工批量删除**；只有 `scratch/` 可以随时删。完成 / 废弃的东西移进 `archive/`，不删——记忆的价值常在"想起当初为什么放弃"。
 7. **初始化是惰性的。** 只读不建任何东西；第一次**写入**时才落最小集合（`.gitignore` 规则、`README.md`、`STATE.md`），其余目录用到哪个建哪个。
 8. **多 agent 只动自己的地盘。** 多个 agent 并行干活才开 `agents/`：任务上 `agents/BOARD.md` 认领（认领即锁），进展写自己的 `agents/<agent-id>/`；全局 `STATE.md` 只在收尾时汇总。
 
 ## 目录结构
 
-`./tmp/` 是这份记忆的唯一根，**整个目录默认不进版本库**。顶层（除 `scratch/` 外）受"不可随意删"约定保护，不要用 `git clean`、清理脚本或手工批量删除。
+`./tmp/` 是这份记忆的唯一根，**整个目录默认不进版本库**。顶层（除 `scratch/` 外）受"不可随意删"约定保护（见核心规则 6）。
 
 目录**按需创建**：下面列的是「该放哪」，不是「启动时就要全建出来」。没出现的目录只是还没用到，需要时再建；它是否真实存在不影响这些约定。
 
@@ -48,6 +48,8 @@ description: 在项目根的 ./tmp/ 下维护开发与研究探索的项目记�
 ├── scratch/             # 真正的草稿，允许随时删
 └── archive/             # 完成 / 废弃的东西移到这里，不删
 ```
+
+`assets/tmp-readme.md` 是这份目录表的落盘版（首次写入时原样复制）；改目录结构时两处一起改。
 
 ### 为什么产物独立于实验
 
@@ -95,43 +97,19 @@ description: 在项目根的 ./tmp/ 下维护开发与研究探索的项目记�
 
 | 任务 | 动作 |
 |---|---|
-| 首次写入（惰性初始化） | 第一次往 `./tmp/` 写东西时自动触发，见下「惰性初始化」；`.gitignore` 追加（先看是否已有 `tmp` 规则）→ `README.md` 逐字落盘 → `STATE.md` 落最小骨架；**其余目录用到再建**；建好后告知用户、`scratch/` 可随意删、其余顶层不可删 |
-| 开新实验 | 扫 `experiments/` 与 `archive/` 取下一个 `EXP-XXXX`；建 `experiments/EXP-XXXX-slug/{README.md,config.yaml,scripts/}`（**不建产物目录**）；`README.md` 先填到「方法」，结论留空跑完再补；`STATE.md`「进行中」加一行，当天 journal 记一行（多 agent 时中途只记 BOARD 与自己的 journal，收尾写回 STATE） |
-| 跑脚本 / 记产物 | 产物写 `outputs/`，不覆盖；位置记**一处**：有归属实验记实验 `README.md`「运行记录」，没归属记当天 `journal/` |
+| 首次写入（惰性初始化） | 见「惰性初始化」：`.gitignore` 追加 → 复制 `assets/tmp-readme.md` → 落 `STATE.md` 骨架；**其余目录用到再建**；建好后告知用户、`scratch/` 可随意删、其余顶层不可删 |
+| 开新实验 | 扫 `experiments/` 与 `archive/` 取下一个 `EXP-XXXX`；建 `experiments/EXP-XXXX-slug/{README.md,config.yaml,scripts/}`（**不建产物目录**）；`README.md` 先填到「方法」，结论留空跑完再补；`STATE.md` 与当天 journal 各记一行（多 agent 时中途只记 BOARD 与自己那份，收尾写回 STATE） |
+| 跑脚本 / 记产物 | 产物按「写入协议」落 `outputs/`，不覆盖；位置记**一处** |
 | 写代码讲解 | 见「各类文件的结构」的 `annotated/` 段；记好来源 |
-| 多 agent 协作 | 并行干活才用：建 `agents/` 与 `BOARD.md`（见「多 agent 协作」段）；各自认领后建自己的 `agents/<agent-id>/` |
-| 沉淀成文档 | 判类型 → `docs/{memory,research,plans}/`；按对应结构写，填全 front-matter（已定稿 `status: stable`，仍在演化的标 `draft`）；`STATE.md`「关键链接」挂上；把来源 journal 的时间范围写进「来源」一节；相关实验 `README.md` 的「结论」同步更新 |
+| 多 agent 协作 | 并行干活才启用；任务板、认领与 id 约定见 `references/multi-agent.md` |
+| 沉淀成文档 | 判类型 → `docs/{memory,research,plans}/`；按对应结构写，填全 front-matter（定稿 `status: stable`，演化中标 `draft`）；`STATE.md`「关键链接」挂上；把来源 journal 的时间范围写进「来源」；相关实验的「结论」同步更新 |
 | 毕业到项目 `./docs/` | **先问用户，不要擅自写项目 `docs/`**；同意后按项目 docs 自己的格式**重写**（不是复制 `./tmp/` 的排版）；`STATE.md` 记一行「已毕业：<tmp 路径> → <docs 路径>」；`./tmp/` 原件保留，`status` 标 `deprecated` 或移 `archive/` |
-| 收尾 | 更新 `STATE.md` 的「现在 / 进行中 / 下一步」，已完成的移走或移入 `archive/`；把当天 `journal/` 里散落的结论索引化（写进 `docs/` 或挂链接）；有实验完成 → 补 `README.md` 结论；遗留阻塞写进「待决 / 阻塞」 |
-| 归档 | 完成 / 废弃的实验：`experiments/EXP-XXXX-slug/` → `archive/EXP-XXXX-slug/`，对应产物一起移走或删；过时文档先 `status: deprecated`，确实无参考价值再移 `archive/` |
+| 收尾 | 更新 `STATE.md` 的「现在 / 进行中 / 下一步」，已完成的移走或移入 `archive/`；把当天 `journal/` 的结论索引化；有实验完成 → 补「结论」；遗留阻塞写进「待决 / 阻塞」 |
+| 归档 | 实验目录 → `archive/EXP-XXXX-slug/`，对应产物一起移走或删；过时文档先 `status: deprecated`，确无参考价值再移 `archive/` |
 
 ## 多 agent 协作
 
-多个 agent **同时**在同一个项目里干活才启用；单 agent 时整个 `agents/` 目录不存在。根 `STATE.md` 仍是唯一入口，全局视角不碎成 N 份。本节与「常用操作」的默认流程冲突时，以本节为准：工作期间的状态只进 BOARD 与自己的子目录，全局文件只在收尾写回。（若各 agent 在各自的 git worktree 里，`./tmp/` 互不共享，本节约定不适用。）
-
-```
-./tmp/agents/
-├── BOARD.md           # 共享任务板：任务 / 认领人 / 状态 / 产物链接
-└── <agent-id>/        # 每个 agent 一份（id 认法见规则 1）
-    ├── STATE.md       # 该 agent 自己的现状 / 下一步
-    └── journal/       # 该 agent 自己的时间线，一天一个文件（约定同全局 journal）
-        └── 2026-10-12.md
-```
-
-`BOARD.md` 一行一条（任务或文件占用都算）：
-
-| 任务 / 占用 | 认领人 | 状态 | 产物 / 备注 |
-|---|---|---|---|
-| EXP-0003 结果分析 | claude-1 | 进行中 | outputs/exp-0003/ |
-| 编辑 `docs/memory/缓存策略.md` | codex-2 | 占用中 | 完成即释放 |
-
-规则：
-
-1. **先认 id，再认任务。** agent-id 优先用用户或环境指定的名字；同名 agent 多会话并发时加序号（`claude-1`、`claude-2`）。建目录前先扫 `agents/`，不撞名。
-2. **认领即锁。** 接任务，或要动 `docs/`、`experiments/` 等共享区的某个文件，先往 `BOARD.md` 加/改一行登记；完成的行标 `done`，别人的行不动。
-3. **只写自己的地盘。** 每个 agent 只写自己的 `agents/<agent-id>/` 和 BOARD 里自己那几行；根 `STATE.md` 和全局 `journal/` 工作期间不动。
-4. **收尾写回全局。** 会话收尾时，把"值得全局知道"的一句话写进根 `STATE.md`（现在/进行中/下一步），细节留在自己子目录。
-5. **BOARD 只放状态和链接**，不放任务详情——详情放任务自己的文档或 journal，BOARD 一行链过去。
+多个 agent **同时**在同一个项目里干活才启用；单 agent 时整个 `agents/` 目录不存在，根 `STATE.md` 仍是唯一入口。工作期间只写 BOARD 与自己子目录，收尾才写回全局；若各 agent 在各自的 worktree 里，`./tmp/` 互不共享，这些约定不适用。任务板格式、认领规则与 id 约定见 `references/multi-agent.md`。
 
 ## 格式约定
 
@@ -194,22 +172,7 @@ related: [EXP-0001]
 
 ### 产物元数据（可选）
 
-`outputs/` 内部不设约定，产物要不要自带来源由程序决定。若希望产物能自证出处，可让程序自己写一份：
-
-```json
-{
-  "experiment": "EXP-0001",
-  "command": "python scripts/run.py --config config.yaml",
-  "started_at": "2026-09-27T15:30:12+08:00",
-  "duration_s": 123.4,
-  "git": { "rev": "abc1234", "dirty": true },
-  "inputs": ["config.yaml"],
-  "artifacts": [{ "path": "metrics.csv", "bytes": 2048 }],
-  "status": "ok"
-}
-```
-
-`status` 建议记 `ok | failed | interrupted`——失败 / 中断的产物同样值得留。
+`outputs/` 不要求自带元数据。若希望产物能自证出处，让程序写一份 sidecar；字段样例见 `references/outputs-metadata.md`。
 
 ### 链接与引用
 
@@ -221,62 +184,17 @@ related: [EXP-0001]
 
 1. 确认当前目录是项目根（`./tmp/` 应建在这里，不是子目录）。
 2. 确保 `.gitignore` 有 `/tmp/`（见下「项目 `.gitignore` 追加」；已有规则就不重复加）。
-3. `./tmp/README.md` 逐字落盘（见下）。
+3. 复制 `assets/tmp-readme.md` 成 `./tmp/README.md`（见下）。
 4. `./tmp/STATE.md` 落一个最小骨架（见下）。
 5. **只创建这次要写的那条路径**（外加上面的入口文件）；其余目录等用到再建，不要预建一堆空目录。
 
 第 2、3 步是**不可逆保护**，不能跳过：少了 `.gitignore`，过程记忆会被提交进版本库、以后 `git clean -fdx` 会连它一起清掉；少了 `README.md`，以后没人知道这个目录不是垃圾。其余都是省事，能省则省。
 
-下面三段文本**原样落盘**（不是可随意改写的建议）。
+下面第 1 项是整文件复制，第 2、3 项**原样落盘**；都不是可随意改写的建议。
 
 ### 1. `./tmp/README.md`
 
-```markdown
-# ./tmp — 项目过程性记忆
-
-> **这个目录不是临时垃圾。** 顶层内容（除 `scratch/` 外）是开发与研究探索的过程记忆，**不要用 `git clean`、清理脚本或手工批量删除**。
-> 只有 `scratch/` 可以随时删除。
-
-## 这是什么
-
-- 探索中的、失败的、临时的、还没定论的东西都在这里。
-- 项目正式文档在 `./docs/`；本目录只保存"过程"。只有稳定且对项目有价值的结论才"毕业"到 `./docs/`。
-
-## 先看哪里
-
-1. `STATE.md` — 当前状态与下一步（唯一入口）
-2. `journal/` — 最近的原始记录
-3. 其余按需：`docs/`、`experiments/*/README.md`、多 agent 时的 `agents/BOARD.md`
-
-## 目录
-
-| 目录 | 用途 | 可删？ |
-|---|---|---|
-| `STATE.md` | 现状 / 进行中 / 下一步 / 待决 / 关键链接 | 否 |
-| `journal/` | 追加式时间线 | 否 |
-| `docs/{memory,research,plans}/` | 沉淀后的稳定内容 | 否 |
-| `experiments/` | 实验的定义与结论（不含产物） | 否 |
-| `outputs/` | 程序产物（内部结构自定） | 否 |
-| `annotated/` | 代码讲解与带注释的源码片段 | 否 |
-| `agents/` | 多 agent 协作：BOARD.md 任务板 + 各 agent 子目录 | 否 |
-| `scripts/` | 跨实验复用的工具 | 否 |
-| `archive/` | 完成 / 废弃的东西 | 否 |
-| `scratch/` | 草稿、一次性文件 | **可以** |
-
-> 目录按需创建：还没出现的目录只是还没用到。
-
-## 脚本输出约定
-
-- 程序产物统一写 `outputs/`，内部结构由程序决定，不设约定。
-- 跑完把产物位置记在一处：有归属实验记实验 `README.md`「运行记录」，没归属记当天 `journal/`。
-
-## 约定
-
-- 结果不可变：每次运行独立目录，不覆盖历史。
-- 只追加 journal，不回头整理；稳定了才写 `docs/`。
-- 多 agent 并行时启用 `agents/`：任务上 `BOARD.md` 认领，进展写各自 `agents/<agent-id>/`，全局 `STATE.md` 只在收尾时更新。
-- 详细规则见 project-memory skill。
-```
+原样复制 `assets/tmp-readme.md`。它就是上面「目录结构」的落盘版——改目录结构时两处一起改。
 
 ### 2. 项目 `.gitignore` 追加
 

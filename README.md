@@ -48,7 +48,7 @@
 
 ## 其他要点
 
-- **写入协议**、**惰性初始化的逐字落盘文本**、**实验 ID / front-matter / journal 格式**、**多 agent 协作**等完整规则见 `SKILL.md`。
+- **写入协议**、**惰性初始化的落盘模板**（`assets/tmp-readme.md`）、**实验 ID / front-matter / journal 格式**见 `SKILL.md`；多 agent 协作见 `references/multi-agent.md`。
 - `docs/` 的门槛：进 `docs/` 要同时满足 ① 时间脱钩（不知道上下文也读得懂）、② 有人会来查。拿不准就先留 `journal/`。
 - 链接一律用相对路径；结论指向 `outputs/` 里的实际路径，而不是复制粘贴数字。
 
@@ -63,6 +63,9 @@ Copy-Item -Recurse . "$env:USERPROFILE\.config\opencode\skills\project-memory"
 ## 目录内容
 
 - `SKILL.md` — skill 本体。
+- `assets/tmp-readme.md` — 首次写入时原样复制到项目的 `./tmp/README.md`。
+- `references/multi-agent.md` — 多 agent 协作的任务板格式与认领规则。
+- `references/outputs-metadata.md` — 可选的产物 sidecar 字段样例。
 
 ## 相关
 
