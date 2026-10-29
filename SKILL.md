@@ -19,6 +19,7 @@ description: 在项目根的 ./tmp/ 下维护项目记忆、实验记录与当�
 6. **删除是最后手段。** 顶层（除 `scratch/` 外）**不要用 `git clean`、清理脚本或手工批量删除**；只有 `scratch/` 可以随时删。完成 / 废弃的东西移进 `archive/`，不删——记忆的价值常在"想起当初为什么放弃"。
 7. **初始化是惰性的。** 只读不建任何东西；第一次**写入**时才落最小集合（`.gitignore` 规则、`README.md`、`STATE.md`），其余目录用到哪个建哪个。
 8. **多 agent 只动自己的地盘。** 多个 agent 并行干活才开 `agents/`：任务上 `agents/BOARD.md` 认领（认领即锁），进展写自己的 `agents/<agent-id>/`；全局 `STATE.md` 只在收尾时汇总。
+9. **远程信息是原料，落点是本地记忆。** 远程仓库的提交 / PR 增量只进 `remote/`，再由它**反过来**更新 `STATE.md`、`docs/`、`experiments/`；别把远程的措辞直接搬成本地结论，也别凭远程变化擅自改动别人正在进行的工作。`remote/cursor.json` 是 `./tmp/` 里**唯一允许覆盖**的文件——它是指针，不是历史。
 
 ## 目录结构
 
@@ -32,6 +33,9 @@ description: 在项目根的 ./tmp/ 下维护项目记忆、实验记录与当�
 ├── STATE.md             # 【必读】现在 / 进行中 / 下一步 / 待决 / 关键链接
 ├── journal/
 │   └── 2026-09-27.md    # 追加式时间线，一天一个文件
+├── remote/              # 远程仓库增量（同步过才有）
+│   ├── cursor.json      # 水位：同步到哪个 sha / 哪一刻；唯一允许覆盖的文件
+│   └── 2026-09-29.md    # 每次同步追加一节，只增不改
 ├── docs/                # 沉淀后的稳定内容；演示材料等也放这，形式自由
 │   ├── memory/          # 决策、架构、约定、踩过的坑
 │   ├── research/        # 研究讲解 / 分析长文 / 论文笔记
@@ -66,6 +70,8 @@ description: 在项目根的 ./tmp/ 下维护项目记忆、实验记录与当�
 | 入口 | 会话收尾 | `STATE.md` | 现在 / 进行中 / 下一步 / 待决 / 关键链接；覆盖更新，<150 行；不装知识本身、细节 |
 | 入口 | 首次写入一次 | `README.md` | 声明这是记忆、列目录与约定 |
 | 只增不改 | 任何"以后可能有用"的观察 / 想法 / 进展 | `journal/YYYY-MM-DD.md` | 一行一条，不排版；不装排版好的长文 |
+| 只增不改 | 同步远程增量 | `remote/YYYY-MM-DD.md` | 本次范围（sha / 时间区间）、合入与关闭的 PR、"对我方的影响"；不装 diff、不装原始 JSON |
+| 指针 | 每次同步收尾 | `remote/cursor.json` | 新水位。**先写摘要、后推水位**；这是唯一允许覆盖的文件 |
 | 只增不改 | 程序产生产物 | `outputs/` | 内部结构自定；不覆盖历史产物 |
 | 只增不改 | 实验做完 / 想法废弃 | `archive/` | 移动，不删；不装仍在进行的工作 |
 | 少而稳定 | 开新实验 | `experiments/EXP-XXXX-slug/` | 定义与结论；不装运行产物 |
@@ -90,8 +96,46 @@ description: 在项目根的 ./tmp/ 下维护项目记忆、实验记录与当�
 
 1. 读 `./tmp/STATE.md`。不存在说明还没有任何记忆，按空状态继续——**只读不初始化**。
 2. 读最新一个 `./tmp/journal/*.md` 的尾部。
-3. 按 `STATE.md` 的「关键链接」按需读对应 `docs/` 文档或 `experiments/*/README.md`；存在 `./tmp/agents/` 时顺带看一眼 `agents/BOARD.md` 的认领情况。
-4. 只在必要时才深入 `outputs/`。
+3. 看 `./tmp/remote/cursor.json`（存在才看）：与 `git log -1 --format=%h origin/main` 对不上、或 `synced_at` 已过一周，就**提示**用户"远程有变化，要不要同步一次"——只提示，不自动 `fetch` / `gh`（冷启动保持只读、不联网）。
+4. 按 `STATE.md` 的「关键链接」按需读对应 `docs/` 文档或 `experiments/*/README.md`；存在 `./tmp/agents/` 时顺带看一眼 `agents/BOARD.md` 的认领情况。
+5. 只在必要时才深入 `outputs/`。
+
+## 远程增量同步
+
+**解决的问题**：`journal/` 记的都是"我方做过什么"。别的机器、别的 agent、同事推到远程的东西，本地记忆里是空白。同步把「上次同步 → 现在」这段远程变化拉进 `./tmp/`，再**反过来更新本地记忆**。
+
+**什么时候做**：用户 `pull` / `fetch` 之后，或用户说"同步一下远程 / 看看远程有什么变化"。冷启动只提示不执行。
+
+**三步，顺序不能换**：
+
+1. **算增量**。命令、分类规则与坑见 `references/remote-sync.md`。
+   - git 侧：`git fetch --prune` 后取 `origin/main` 的 `<旧 sha>..<新 sha>`。
+   - PR 侧：按 `mergedAt` / `closedAt` 分类；只有 `updated:` 的单独归"未定"，不混进合入。
+   - 没有 `gh` / 非 GitHub：只做 git 侧，并在摘要头部标一行**降级**，别假装拿全了。
+2. **写摘要** `remote/YYYY-MM-DD.md`。一天一份，每次同步追加一节 `## HH:MM`；头部写清本次范围（sha 区间 + 时间区间），靠范围判重。
+3. **推水位** `remote/cursor.json`。
+
+> **先写摘要、后推水位。** 反过来的话，中途失败会让那段增量永久丢失（水位已越过，摘要没落地）。
+
+**然后才是重点：拿远端的东西反向更新本地记忆。** 摘要里的 `## 对我方的影响` 一节就是为这步准备的：
+
+| 远程变化 | 本地要动的 |
+|---|---|
+| 合入 / 关闭的 PR 让 `STATE.md`「待决 / 阻塞」某条过时 | 收尾时改写或移走，别让它一直挂着 |
+| 改到 `docs/` 某篇讲的东西 | 复核；过时标 `status: deprecated`，内容变了更新 `updated` 并补「来源」 |
+| 改到实验依赖的代码 / 数据 | 在实验 `README.md`「未决」记一句可复现性风险 |
+| 跟我们无关的别人进展 | 留在 `remote/`，不进 `STATE.md`，不进 `journal/` 正文 |
+
+`journal/` 只记一行指针，不抄内容：
+
+```markdown
+- 09:12 远程同步 abc1234..def5678：合入 3、关闭 1、新开 2；详见 remote/2026-09-29.md
+```
+
+**两条纪律**：
+
+- **远程的措辞不等于我们的结论。** 摘要里可以照抄 PR 标题，`STATE.md` / `docs/` 里必须用我们自己的话重写——否则等于把别人的视角当了事实。
+- **`./tmp/` 不进版本库，cursor 是每个 checkout 一份。** 多 worktree / 多机器各同步各的，同一段范围可能被两个地方各记一次；这不冲突，但别指望它们自动对齐（同 `references/multi-agent.md` 的限制）。
 
 ## 常用操作
 
@@ -100,6 +144,7 @@ description: 在项目根的 ./tmp/ 下维护项目记忆、实验记录与当�
 | 首次写入（惰性初始化） | 见「惰性初始化」：`.gitignore` 追加 → 复制 `assets/tmp-readme.md` → 落 `STATE.md` 骨架；**其余目录用到再建**；建好后告知用户、`scratch/` 可随意删、其余顶层不可删 |
 | 开新实验 | 扫 `experiments/` 与 `archive/` 取下一个 `EXP-XXXX`；建 `experiments/EXP-XXXX-slug/{README.md,config.yaml,scripts/}`（**不建产物目录**）；`README.md` 先填到「方法」，结论留空跑完再补；`STATE.md` 与当天 journal 各记一行（多 agent 时中途只记 BOARD 与自己那份，收尾写回 STATE） |
 | 跑脚本 / 记产物 | 产物按「写入协议」落 `outputs/`，不覆盖；位置记**一处** |
+| 同步远程增量 | 见上「远程增量同步」：`git fetch --prune` → 算 git / PR 增量 → 写 `remote/<今天>.md` → **再**推 `cursor.json` → 按「对我方的影响」决定改哪些本地记忆 |
 | 写代码讲解 | 见「各类文件的结构」的 `annotated/` 段；记好来源 |
 | 多 agent 协作 | 并行干活才启用；任务板、认领与 id 约定见 `references/multi-agent.md` |
 | 沉淀成文档 | 判类型 → `docs/{memory,research,plans}/`；按对应结构写，填全 front-matter（定稿 `status: stable`，演化中标 `draft`）；`STATE.md`「关键链接」挂上；把来源 journal 的时间范围写进「来源」；相关实验的「结论」同步更新 |
@@ -116,6 +161,7 @@ description: 在项目根的 ./tmp/ 下维护项目记忆、实验记录与当�
 - **时间戳**：journal 文件名 `YYYY-MM-DD.md`；文档 front-matter 日期 `YYYY-MM-DD`；行内时间 `HH:MM`。用本地时间。
 - **实验 ID**：格式 `EXP-0001`，**四位零填充、单调递增、永不复用**（即使实验被归档）。目录名 `EXP-0001-<slug>`，slug 为小写 kebab-case、≤5 个词、能望文生义。新建时扫描 `experiments/` 取当前最大编号 +1，同时检查 `archive/`，避免复用编号。
 - **文件命名**：文档用英文 kebab-case（`storage-latency-model.md`）；标题可以中文，文件名保持可跨平台稳定。
+- **`remote/`**：摘要一天一份 `YYYY-MM-DD.md`，每次同步追加 `## HH:MM` 小节，不回头改已写小节；`cursor.json` 随同步覆盖。摘要头部必备三行——**范围**（`<旧 sha>..<新 sha>` + 时间区间）、**抓取时间**、**是否降级**。
 - **`outputs/`**：内部结构不设约定，也不要求自带元数据；唯一要求是把产物位置记在**一处**——有归属实验记实验 `README.md`「运行记录」，没归属记当天 `journal/`。
 
 ### 各类文件的结构

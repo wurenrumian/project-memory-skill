@@ -8,6 +8,7 @@
 
 - 用户说"记录一下 / 记一下这个结论 / 维护项目状态 / 当前进度 / 下一步 / 研究记录 / 实验记录 / 开个实验 / 记录实验结果 / 整理探索笔记 / 这些先别放进 docs"
 - 提到 project memory、journal、experiment run、多 agent 协作
+- 用户 pull / fetch 之后要"同步一下远程 / 看看远程有什么变化"
 
 ## 核心规则
 
@@ -19,6 +20,7 @@
 6. **删除是最后手段。** 完成 / 废弃的东西移进 `archive/`。
 7. **初始化是惰性的。** 只读不建；第一次**写入**时才落最小集合（`.gitignore` 规则、`README.md`、`STATE.md`）。
 8. **多 agent 只动自己的地盘**，任务在 `agents/BOARD.md` 认领（认领即锁）。
+9. **远程信息只是原料**：远程的提交 / PR 增量进 `remote/`，再反过来更新本地记忆；`remote/cursor.json` 是唯一允许覆盖的文件。
 
 ## 目录结构
 
@@ -29,6 +31,7 @@
 ├── README.md            # 这目录是什么、"顶层不可随意删"的约定、入口指引
 ├── STATE.md             # 【必读】现在 / 进行中 / 下一步 / 待决 / 关键链接
 ├── journal/             # 追加式时间线，一天一个文件
+├── remote/              # 远程仓库增量：cursor.json 水位 + 每次同步的摘要
 ├── docs/                # 沉淀后的稳定内容：memory/ research/ plans/
 ├── experiments/         # 实验的「定义与结论」（不含产物）
 ├── outputs/             # 所有程序产物；内部结构自定
@@ -43,12 +46,14 @@
 
 1. 读 `./tmp/STATE.md`。不存在说明还没有任何记忆，按空状态继续——**只读不初始化**。
 2. 读最新一个 `./tmp/journal/*.md` 的尾部。
-3. 按 `STATE.md` 的「关键链接」按需读对应 `docs/` 文档或 `experiments/*/README.md`；存在 `./tmp/agents/` 时看一眼 `BOARD.md` 的认领情况。
-4. 只在必要时才深入 `outputs/`。
+3. 看 `./tmp/remote/cursor.json`（存在才看）：与 `origin/main` 对不上或已过一周，提示用户"要不要同步一次远程"——只提示，不自动联网。
+4. 按 `STATE.md` 的「关键链接」按需读对应 `docs/` 文档或 `experiments/*/README.md`；存在 `./tmp/agents/` 时看一眼 `BOARD.md` 的认领情况。
+5. 只在必要时才深入 `outputs/`。
 
 ## 其他要点
 
 - **写入协议**、**惰性初始化的落盘模板**（`assets/tmp-readme.md`）、**实验 ID / front-matter / journal 格式**见 `SKILL.md`；多 agent 协作见 `references/multi-agent.md`。
+- **远程增量同步**（`remote/` 的 cursor 字段、`git` / `gh` 命令、摘要模板、坑）见 `references/remote-sync.md`。
 - `docs/` 的门槛：进 `docs/` 要同时满足 ① 时间脱钩（不知道上下文也读得懂）、② 有人会来查。拿不准就先留 `journal/`。
 - 链接一律用相对路径；结论指向 `outputs/` 里的实际路径，而不是复制粘贴数字。
 
@@ -65,6 +70,7 @@ Copy-Item -Recurse . "$env:USERPROFILE\.config\opencode\skills\project-memory"
 - `SKILL.md` — skill 本体。
 - `assets/tmp-readme.md` — 首次写入时原样复制到项目的 `./tmp/README.md`。
 - `references/multi-agent.md` — 多 agent 协作的任务板格式与认领规则。
+- `references/remote-sync.md` — 远程增量同步：水位、`git` / `gh` 命令、摘要模板、边界。
 - `references/outputs-metadata.md` — 可选的产物 sidecar 字段样例。
 
 ## 相关

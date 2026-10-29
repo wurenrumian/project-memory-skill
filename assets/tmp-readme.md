@@ -12,7 +12,8 @@
 
 1. `STATE.md` — 当前状态与下一步（唯一入口）
 2. `journal/` — 最近的原始记录
-3. 其余按需：`docs/`、`experiments/*/README.md`、多 agent 时的 `agents/BOARD.md`
+3. `remote/` — 上次同步拉到的远程变化（同步过才有）
+4. 其余按需：`docs/`、`experiments/*/README.md`、多 agent 时的 `agents/BOARD.md`
 
 ## 目录
 
@@ -20,6 +21,7 @@
 |---|---|---|
 | `STATE.md` | 现状 / 进行中 / 下一步 / 待决 / 关键链接 | 否 |
 | `journal/` | 追加式时间线 | 否 |
+| `remote/` | 远程仓库增量：水位 `cursor.json` + 每次同步的摘要 | 否（`cursor.json` 会被覆盖） |
 | `docs/{memory,research,plans}/` | 沉淀后的稳定内容 | 否 |
 | `experiments/` | 实验的定义与结论（不含产物） | 否 |
 | `outputs/` | 程序产物（内部结构自定） | 否 |
@@ -40,5 +42,6 @@
 
 - 结果不可变：每次运行独立目录，不覆盖历史。
 - 只追加 journal，不回头整理；稳定了才写 `docs/`。
+- `remote/cursor.json` 是**唯一**会被覆盖的文件（同步水位）。远程带来的变化只当作原料，结论仍写回本地 `STATE.md` / `docs/`。
 - 多 agent 并行时启用 `agents/`：任务上 `BOARD.md` 认领，进展写各自 `agents/<agent-id>/`，全局 `STATE.md` 只在收尾时更新。
 - 详细规则见 project-memory skill。
