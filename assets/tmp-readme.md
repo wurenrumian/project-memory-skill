@@ -24,7 +24,7 @@
 | `remote/` | 远程仓库增量：水位 `cursor.json` + 每次同步的摘要 | 否（`cursor.json` 会被覆盖） |
 | `docs/{memory,research,plans}/` | 沉淀后的稳定内容 | 否 |
 | `experiments/` | 实验的定义与结论（不含产物） | 否 |
-| `outputs/` | 程序产物（内部结构自定） | 否 |
+| `outputs/` | 程序产物（内部结构自定）；单个过期实验的产物可删，整目录不批量清 | 部分 |
 | `annotated/` | 代码讲解与带注释的源码片段 | 否 |
 | `agents/` | 多 agent 协作：BOARD.md 任务板 + 各 agent 子目录 | 否 |
 | `scripts/` | 跨实验复用的工具 | 否 |
@@ -37,6 +37,7 @@
 
 - 程序产物统一写 `outputs/`，内部结构由程序决定，不设约定。
 - 跑完把产物位置记在一处：有归属实验记实验 `README.md`「运行记录」，没归属记当天 `journal/`。
+- 单个过期实验的产物可以删或移 `archive/`（在运行记录里留一行）；但整目录不要用 `git clean`、清理脚本或手工批量删除——只此一个例外，其余顶层内容（除 `scratch/`）不可批量删。
 
 ## 约定
 
@@ -44,4 +45,4 @@
 - 只追加 journal，不回头整理；稳定了才写 `docs/`。
 - `remote/cursor.json` 是**唯一**会被覆盖的文件（同步水位）。远程带来的变化只当作原料，结论仍写回本地 `STATE.md` / `docs/`。
 - 多 agent 并行时启用 `agents/`：任务上 `BOARD.md` 认领，进展写各自 `agents/<agent-id>/`，全局 `STATE.md` 只在收尾时更新。
-- 详细规则见 project-memory skill。
+- 详细规则见本机安装的 project-memory skill（如 `~/.config/opencode/skills/project-memory/`）；没装它的人以本文件的约定为准。

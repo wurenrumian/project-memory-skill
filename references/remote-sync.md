@@ -48,7 +48,7 @@ GitLab 用 `glab mr list --merged-after=<date>` 同构替换，规则一致。
 git symbolic-ref --short refs/remotes/origin/HEAD   # → origin/main 或 origin/master
 ```
 
-- `cursor.json` 是 `./tmp/` 里唯一允许覆盖的文件。它是指针，不是历史；覆盖它不违反"产物不覆盖"。
+- `cursor.json` 是 `./tmp/` 里唯一允许覆盖的文件。它是指针，不是历史；覆盖它不违反"产物不覆盖"。覆盖用「写临时文件再 rename / 移动替换」，别原地改写——半截 JSON 会让下次同步解析挂掉（同 §6.8）。
 
 ---
 
@@ -81,7 +81,7 @@ fi
 ## 3. PR 侧：三个查询，按时间分类
 
 ```bash
-SINCE=<cursor.prs.updated_through>
+SINCE=<cursor.prs.updated_through>   # 进 --search 的时间串截断成 YYYY-MM-DD（见下）
 
 # ① 真正合入的 —— 摘要主体
 gh pr list --state merged --search "merged:>=$SINCE" --limit 50 \
@@ -105,6 +105,7 @@ gh pr list --state open --search "updated:>=$SINCE" --limit 50 \
 | 新开 / 有更新（未定） | 只有 `updatedAt` |
 
 - **`updated:` 只是"有动静"，不是"有变化"。** 评论、标签、机器人都会刷 `updatedAt`。所以查询 ③ 只用来提示"这个 PR 有人在动"，别据此下结论，也别把它混进合入。
+- **比较边界截断到日期。** gh 的 `--search` 对带时区偏移的时间串（`+08:00`）兼容性不稳，所以进 search 的 `$SINCE` 截断成 `YYYY-MM-DD`。多捞 / 漏掉的一两分钟，靠 cursor 的精确时间戳和摘要范围判重兜底（同 §6.5）。
 - **不拉 diff。** 只要 `files` 里的路径列表就够关联，正文按需 `gh pr view <n> --json body` 单独取。
 - 选项：仓库用 releases 就补一条 `gh release list --limit 5`；不用就跳过，别为了完整而完整。
 
@@ -174,7 +175,7 @@ gh pr list --state open --search "updated:>=$SINCE" --limit 50 \
 5. **时区边界。** 全用带偏移的本地时间；`--since` / `>=` 的比较边界可能重叠或漏掉一两分钟，靠 sha 区间和摘要范围判重，别追求零误差。
 6. **cursor 是每个 checkout 一份。** `./tmp/` 不进版本库，多 worktree / 多机器各同步各的，同一段范围可能被各记一次。这不冲突，但不自动对齐（同 `multi-agent.md` 的限制）。
 7. **原始 JSON 不用存 `outputs/`。** 随手可重取；只有需要留证据（比如事后核对"当时确实合入了"）才落盘。
-8. **同步失败不要留半截水位。** 顺序永远是：摘要落盘 → 再推 cursor。中途失败就停在旧水位，下次重算，最坏是重复，不是丢失。
+8. **同步失败不要留半截水位。** 顺序永远是：摘要落盘 → 再推 cursor。中途失败就停在旧水位，下次重算，最坏是重复，不是丢失；推 cursor 本身用「临时文件 + rename」，即使进程写一半被杀，留在盘上的也是完整旧水位，不是坏文件。
 
 ## 检查清单
 
