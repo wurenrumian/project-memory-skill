@@ -1,0 +1,4 @@
+* text=auto
+# 脚本与文档统一 LF：检查脚本按行匹配，样本库 fixture 也需要稳定换行
+*.py text eol=lf
+*.md text eol=lf
