@@ -98,7 +98,7 @@ Copy-Item -Recurse . "$env:USERPROFILE\.config\opencode\skills\project-memory"
 - `assets/find-memory.py` — 查询入口（`--tag`、`--untagged`、`--orphans`）。
 - `assets/index-memory.py` — 生成 `docs/index.md`。
 - `assets/index-experiments.py` — 生成 `experiments/INDEX.md`。
-- `tests/` — 工具集的回归测试与最小样本库，`python tests/run_tests.py`。
+- `tests/` — 工具集的回归测试与最小样本库，`python tests/run_tests.py`；性能基准 `python tests/bench.py`。
 - `references/multi-agent.md` — 多 agent 协作的任务板格式与认领规则。
 - `references/remote-sync.md` — 远程增量同步：水位、`git` / `gh` 命令、摘要模板、边界。
 - `references/migration.md` — 毕业到项目 docs、接管既有 `tmp/`、旧版记忆升级。

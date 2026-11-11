@@ -10,6 +10,15 @@ python tests/run_tests.py
 
 运行器会把 `tests/tmp/` 复制到系统临时目录再跑，**不会改动仓库里的样本**。`git` 不保留 mtime，所以孤儿样本“40 天前修改”这个条件由运行器用 `os.utime` 模拟。
 
+## 性能基准
+
+```bash
+python tests/bench.py                # 默认 2000 篇
+python tests/bench.py --docs 10000   # 大规模
+```
+
+它造一个合成 `tmp/` 再测四个命令，不属于 `run_tests.py`。看两个数：**缓存命中**才是日常开销；**首跑**含建缓存，受杀软与首次读盘影响，同一规模上下能差两三倍，不适合横向比较。
+
 ## 样本库 `tests/tmp/`
 
 它是一个最小可用的 `./tmp/` 记忆：`STATE.md` + `docs/` + `experiments/` + `journal/`。
