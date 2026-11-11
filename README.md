@@ -19,7 +19,7 @@
 4. **产物不覆盖**，也别写进 `experiments/`。
 5. **两个入口，各有分工。** 了解现状先读 `./tmp/STATE.md`；查找具体文档先看 `./tmp/docs/index.md`；都不必通读整个 `./tmp/`。
 6. **删除是最后手段，移动是常态。** 完成 / 废弃的东西默认移进 `archive/`；`scratch/` 可随时删；只有范围具体、依据清楚的程序产物或明确无保留价值的文件才真删。
-7. **初始化是惰性的。** 只读不建；第一次**写入**时才落最小集合（`.gitignore` 规则、`README.md`、`STATE.md`、`scripts/` 工具集）。
+7. **初始化是惰性的。** 只读不建；第一次**写入**时才落最小集合（`.gitignore` 规则、`README.md`、`STATE.md`）。检查工具不复制进项目，直接跑 skill 的 `assets/`。
 8. **多 agent 只动自己的地盘**，任务在 `agents/BOARD.md` 认领（认领即锁）。
 9. **远程信息只是原料**：远程的提交 / PR 增量进 `remote/`，再反过来更新本地记忆；`remote/cursor.json` 与生成的 `docs/index.md` 是仅有的两处覆盖写。
 
@@ -42,7 +42,7 @@
 ├── outputs/             # 所有程序产物；内部结构自定
 ├── annotated/           # 需着重讲解 / 强调的代码
 ├── agents/              # 多 agent 协作：BOARD.md + 各 agent 子目录（并行才建）
-├── scripts/             # 跨实验复用的工具（含 check-memory 工具集）
+├── scripts/             # 实验 / 分析脚本（检查工具不在这里）
 ├── scratch/             # 真正的草稿，允许随时删
 └── archive/             # 退役内容：INDEX.md + journal/ remote/ docs/ EXP-XXXX-slug/
 ```
@@ -59,7 +59,7 @@
 
 - **文档约定**：`docs/` 文档只有 H1 + 正文 + `tags` + 引用链接；front-matter 只保留 `tags`（第一个是主 tag）；引用用 Markdown 链接、路径 `./tmp/` 开头（如 `[x](./tmp/docs/research/x.md)`；文件相对写法也认），Obsidian 的 wiki 形式也兼容（`[[./tmp/docs/research/x]]`、`[[docs/research/x]]`、唯一时的 `[[x]]`）；`docs/` 内文件名不重复，实验等按路径引用的文件可以重名。
 - **索引**：`docs/index.md`（知识）与 `experiments/INDEX.md`（实验状态）是生成物，不手改；`archive/INDEX.md`（退役原因）只追加。索引里的“正在关注”按 mtime 推算，是启发式指标。
-- **检查**：`check-memory.py` 一次跑完断链 / 歧义 / 重名 / 孤儿 / 无 tag / tag 规范 / 整理阈值（`--limit 0` 不截断）；`find-memory.py` 查 tag / 无 tag / 孤儿；`index-memory.py`、`index-experiments.py` 生成两个索引。解析结果缓存在 `.memory-cache.json`（按 mtime + size + 活目录归属命中，`--no-cache` 可绕过）。孤儿只是复核线索，不是删除结论。
+- **检查**：脚本在 skill 的 `assets/` 里直接跑、**不复制进项目**（`python "$SKILL/assets/check-memory.py"`，项目根下不用传 `--root`）。`check-memory.py` 一次跑完断链 / 歧义 / 重名 / 孤儿 / 无 tag / tag 规范 / 整理阈值（`--limit 0` 不截断）；`find-memory.py` 查 tag / 无 tag / 孤儿；`index-memory.py`、`index-experiments.py` 生成两个索引。解析结果缓存在 `.memory-cache.json`（按 mtime + size + 活目录归属命中，`--no-cache` 可绕过）。孤儿只是复核线索，不是删除结论。
 - **链接判定**：带 `#锚点` 的 Markdown 链接、指向目录的链接、`./tmp/` 开头（从项目根看）与文件相对两种写法、Windows / macOS 上大小写不一致的 wiki 链接都算有效；wiki 目标的 `./`、`tmp/` 前缀会先剥掉再按 tmp 根解析（`[[./tmp/docs/x]]` 与 `[[docs/x]]` 等价）；`journal/`、`remote/`、`archive/`、`scratch/` 里的链接不计入入链，也不报断链。
 - **整理**：目录条目 ≥16（软）/ ≥20（硬）、`journal/` 活跃月份 >2 时提示——`check-memory.py` 的「整理」小节直接给数，不用手动数；旧整月滚到 `archive/`，退役文档移 `archive/docs/`，每次归档在 `archive/INDEX.md` 追加一行——移动，不删。
 - **写入协议**、**惰性初始化的落盘模板**（`assets/tmp-readme.md`）、**实验 ID / journal 格式**见 `SKILL.md`；多 agent 协作见 `references/multi-agent.md`。
@@ -78,6 +78,7 @@
 | 文档约定（tag / 链接 / 索引 / 检查 / 整理） | `SKILL.md` ↔ `README.md` ↔ `assets/tmp-readme.md` |
 | 迁移 / 毕业流程 | `references/migration.md` ↔ `SKILL.md` 常用操作 |
 | 脚本行为 | `assets/` 工具集 ↔ `tests/tmp/` 样本 ↔ `tests/run_tests.py` |
+| 工具分发（不复制进项目 / `--root` 默认值） | `SKILL.md`「索引与检验」↔ `assets/tmp-readme.md`「检查与索引」 |
 
 改完脚本或规则先跑 `python tests/run_tests.py`，全绿再提交。
 

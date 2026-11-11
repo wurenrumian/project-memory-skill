@@ -44,6 +44,7 @@ python tests/bench.py --docs 10000   # 大规模
 
 - `check`：退出码 1，报出断链、歧义、重名、孤儿，且不误报代码块内容；`--json` 四类结果可解析；
 - `check` 不误报：带锚点 / 指目录 / `./tmp/` 开头 / 大小写不一致的链接；也不报 `journal/`、`archive/` 里的断链；
+- 工具直接从 `assets/` 跑：不传 `--root` 也能从项目根 / 子目录往上找到 `./tmp/`；项目里留着旧版 `tmp/scripts/` 副本时给出删除提示；
 - `check --limit 1` 会截断长列表并提示用 `--json`；
 - `check` 的「整理」小节给出目录条目数与 journal 活跃月份，样本未到阈值时显示未触发；运行器再往 `docs/plans/` 塞 20 个文件，验证过阈值时提示整理；
 - `find --tag storage`：只返回 `docs/memory/cache-shard.md`；

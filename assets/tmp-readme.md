@@ -33,7 +33,7 @@
 | `outputs/` | 程序产物（内部结构自定）；单个过期实验的产物可删，整目录不批量清 | 部分 |
 | `annotated/` | 代码讲解与带注释的源码片段 | 否 |
 | `agents/` | 多 agent 协作：BOARD.md 任务板 + 各 agent 子目录 | 否 |
-| `scripts/` | 跨实验复用的工具（含 check-memory 工具集） | 否 |
+| `scripts/` | 实验 / 分析脚本（检查工具不在这里，直接从 skill 的 `assets/` 跑） | 否 |
 | `scratch/` | 草稿、一次性文件 | **可以** |
 | `archive/` | 退役内容：`INDEX.md` + `journal/YYYY-MM/`、`remote/YYYY-MM/`、`docs/`、`annotated/`、`EXP-XXXX-slug/` | 否 |
 
@@ -50,20 +50,22 @@
 
 ## 检查与索引
 
-在**项目根**执行：
+工具由 **project-memory skill 的 `assets/`** 提供，**不复制进本目录**（复制出来的副本一定会过期）。在**项目根**执行，把 `<skill>` 换成本机 skill 目录（如 `~/.config/opencode/skills/project-memory`）：
 
 ```bash
-python tmp/scripts/check-memory.py               # 结构 / 引用 / 主题 / 整理阈值
-python tmp/scripts/check-memory.py --json        # 机器可读
-python tmp/scripts/check-memory.py --limit 0     # 列表不截断（默认每类 40 条）
-python tmp/scripts/find-memory.py --tag storage  # 按 tag 找文件路径（可重复，多个为 AND）
-python tmp/scripts/find-memory.py --untagged     # 没有 tag 的文档
-python tmp/scripts/find-memory.py --orphans      # 孤儿清单
-python tmp/scripts/index-memory.py               # 重新生成 docs/index.md
-python tmp/scripts/index-experiments.py          # 重新生成 experiments/INDEX.md
+python "<skill>/assets/check-memory.py"               # 结构 / 引用 / 主题 / 整理阈值
+python "<skill>/assets/check-memory.py" --json        # 机器可读
+python "<skill>/assets/check-memory.py" --limit 0     # 列表不截断（默认每类 40 条）
+python "<skill>/assets/find-memory.py" --tag storage  # 按 tag 找文件路径（可重复，多个为 AND）
+python "<skill>/assets/find-memory.py" --untagged     # 没有 tag 的文档
+python "<skill>/assets/find-memory.py" --orphans      # 孤儿清单
+python "<skill>/assets/index-memory.py"               # 重新生成 docs/index.md
+python "<skill>/assets/index-experiments.py"          # 重新生成 experiments/INDEX.md
 ```
 
-- **结构**：断链、裸 basename 歧义、`docs/` 重名——有问题时退出码 1；首行 `toolset N` 是工具集版本，比 skill 里的旧就该重新复制 `tmp/scripts/`；
+在项目根执行时不用传 `--root`（脚本会从当前目录往上找带 `STATE.md` / `docs/` 的 `./tmp/`）；在子目录里跑或要指到别处，加 `--root <项目根>/tmp`。
+
+- **结构**：断链、裸 basename 歧义、`docs/` 重名——有问题时退出码 1；首行 `toolset N` 只是工具版本标识；若提示 `scripts/memory_lib.py` 是旧副本，删掉 `scripts/` 即可；
 - **引用**：孤儿 = 入链 0 且 mtime 超过 30 天的 `docs/` 文档，只是复核线索；`journal/`、`remote/`、`archive/`、`scratch/` 既不算入链，也不报断链；
 - **主题**：无 tag 文档、tag 计数，以及 tag 规范提示（大写 / 非 kebab / 超过 3 个 / `cache` 与 `caching` 这类变体）；“近期活跃”按 mtime 推算，是启发式指标；
 - **整理**：直接给出目录条目数与 `journal/` 活跃月份，过阈值时提示整理一轮。

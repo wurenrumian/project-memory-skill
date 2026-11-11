@@ -40,8 +40,8 @@
 
 迁移后：
 
-1. 跑 `python tmp/scripts/check-memory.py`，逐条修断链、`docs/` 重名、歧义链接；
-2. 跑 `python tmp/scripts/index-memory.py` 与 `python tmp/scripts/index-experiments.py` 重建索引；
+1. 跑 `python "$SKILL/assets/check-memory.py"`（项目根下不用 `--root`），逐条修断链、`docs/` 重名、歧义链接；
+2. 跑 `python "$SKILL/assets/index-memory.py"` 与 `python "$SKILL/assets/index-experiments.py"` 重建索引；
 3. 当天 journal 记一行“迁移了 N 篇，修了 M 条链接”。
 
 **只在用户同意时动既有文档，不批量重写正文。** 先迁一小批（如 `docs/memory/`），确认检查和索引正常，再迁其余。

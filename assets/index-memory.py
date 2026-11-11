@@ -47,7 +47,7 @@ def build_index(a) -> str:
     lines = [
         "# 索引",
         "",
-        "> 生成文件，勿手改。重新生成：`python tmp/scripts/index-memory.py`",
+        "> 生成文件，勿手改。重新生成：`python \"<skill>/assets/index-memory.py\"`",
         "",
         f"*生成于 {datetime.now().strftime('%Y-%m-%d %H:%M')}*",
         "",
@@ -76,13 +76,13 @@ def build_index(a) -> str:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="index-memory：生成 docs/index.md")
-    ap.add_argument("--root", default=None, help="tmp 根目录（默认脚本上级目录）")
+    ap.add_argument("--root", default=None, help="tmp 根目录（默认从当前目录往上找 ./tmp/）")
     ap.add_argument("--no-cache", action="store_true", help="忽略增量缓存，强制全量解析")
     args = ap.parse_args(argv)
 
     root = args.root or default_root(__file__)
     if not os.path.isdir(root):
-        print(f"不是目录：{root}", file=sys.stderr)
+        print(f"不是目录：{root}（未传 --root 时，脚本从当前目录往上找带 STATE.md / docs/ 的 ./tmp/）", file=sys.stderr)
         return 2
 
     a = analyze(root, use_cache=not args.no_cache)

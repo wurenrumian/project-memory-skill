@@ -5,7 +5,7 @@
   python check-memory.py            # 全部检查：结构 / 引用 / 主题 / 整理
   python check-memory.py --json     # 机器可读
   python check-memory.py --limit 0  # 列表不截断
-  python check-memory.py --root DIR # 指定 tmp 根（默认脚本上级目录）
+  python check-memory.py --root DIR # 指定 tmp 根（默认从当前目录往上找 ./tmp/）
 
 结构问题（断链 / 歧义 / 重名）退出码 1；其余是信息报告。
 """
@@ -27,6 +27,7 @@ from memory_lib import (
     analyze,
     default_root,
     fmt_date,
+    legacy_scripts,
     rel,
     tag_audit,
     tidy_status,
@@ -37,6 +38,9 @@ def report(a, limit: int = 40) -> str:
     out = []
     add = out.append
     add(f"check-memory · {a.root} · toolset {TOOLSET_VERSION}")
+    stale = legacy_scripts(a.root)
+    if stale:
+        add(f"  注意：{rel(a.root, stale)} 是旧副本；工具现在直接从 skill 的 assets/ 跑，这个目录可以删掉")
     add("")
 
     add("结构")
@@ -110,7 +114,7 @@ def report(a, limit: int = 40) -> str:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="check-memory：检查链接、孤儿、tag 与整理阈值")
-    ap.add_argument("--root", default=None, help="tmp 根目录（默认脚本上级目录）")
+    ap.add_argument("--root", default=None, help="tmp 根目录（默认从当前目录往上找 ./tmp/）")
     ap.add_argument("--json", action="store_true", help="JSON 输出")
     ap.add_argument("--no-cache", action="store_true", help="忽略增量缓存，强制全量解析")
     ap.add_argument(
@@ -123,7 +127,7 @@ def main(argv=None) -> int:
 
     root = args.root or default_root(__file__)
     if not os.path.isdir(root):
-        print(f"不是目录：{root}", file=sys.stderr)
+        print(f"不是目录：{root}（未传 --root 时，脚本从当前目录往上找带 STATE.md / docs/ 的 ./tmp/）", file=sys.stderr)
         return 2
 
     a = analyze(root, use_cache=not args.no_cache)
@@ -136,6 +140,7 @@ def main(argv=None) -> int:
         payload = {
             "root": rel(os.getcwd(), root) if root.startswith(os.getcwd()) else root,
             "toolset": TOOLSET_VERSION,
+            "legacyScripts": bool(legacy_scripts(root)),
             "broken": [{"source": a.docs[s].relpath, "target": t} for s, t in a.broken],
             "ambiguous": [
                 {"source": a.docs[s].relpath, "target": t, "candidates": h}

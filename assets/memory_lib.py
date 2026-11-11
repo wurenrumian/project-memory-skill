@@ -36,7 +36,7 @@ TIDY_MAX_LISTED = 40
 
 CACHE_FILE = ".memory-cache.json"
 CACHE_VERSION = 2  # 解析逻辑 / 缓存字段变了就 +1，旧缓存自动失效
-TOOLSET_VERSION = 2  # tmp/scripts/ 里的副本可能比 skill 旧；check 首行会打印
+TOOLSET_VERSION = 2  # 工具版本标识：check 首行会打印，方便核对报告出自哪版
 
 CASE_INSENSITIVE = os.name == "nt" or sys.platform == "darwin"
 
@@ -56,8 +56,39 @@ def norm(path: str) -> str:
 
 
 def default_root(script_file: str) -> str:
-    """脚本位于 tmp/scripts/，默认根就是 tmp/。"""
-    return norm(os.path.dirname(os.path.dirname(os.path.abspath(script_file))))
+    """决定 tmp 根。
+
+    工具直接从 skill 的 `assets/` 运行（不再复制进项目），所以默认根这样取：
+    脚本自己在 `<tmp>/scripts/` 下（旧副本）→ 取上级目录；否则从当前目录往上找 `./tmp/`。
+    """
+    here = norm(os.path.dirname(os.path.dirname(os.path.abspath(script_file))))
+    if os.path.basename(here) == "tmp":
+        return here
+    found = find_tmp_root(os.getcwd())
+    return found or os.path.join(norm(os.getcwd()), "tmp")
+
+
+def find_tmp_root(start: str) -> str:
+    """从 start 往上找带记忆特征的 `tmp/`，找不到返回空串。"""
+    cur = norm(start)
+    while True:
+        cand = os.path.join(cur, "tmp")
+        if os.path.isdir(cand) and (
+            os.path.isfile(os.path.join(cand, "STATE.md"))
+            or os.path.isdir(os.path.join(cand, "docs"))
+            or os.path.isdir(os.path.join(cand, "journal"))
+        ):
+            return norm(cand)
+        parent = os.path.dirname(cur)
+        if parent == cur:
+            return ""
+        cur = parent
+
+
+def legacy_scripts(root: str) -> str:
+    """旧版会把工具集复制进 `<tmp>/scripts/`；如今直接跑 skill 里的脚本，副本只会过期。"""
+    path = os.path.join(root, "scripts", "memory_lib.py")
+    return path if os.path.isfile(path) else ""
 
 
 def rel(root: str, path: str) -> str:

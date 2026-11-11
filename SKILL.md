@@ -17,7 +17,7 @@ description: 在项目根的 ./tmp/ 下维护项目记忆、实验记录与当�
 4. **产物不覆盖。** 每次运行写独立目录，`outputs/` 内部结构由程序决定。
 5. **两个入口。** 看现状读 `./tmp/STATE.md`，找文档看 `./tmp/docs/index.md`；不必通读整个 `./tmp/`。
 6. **移动是常态，删除是例外。** 退役内容进 `archive/`，`scratch/` 随时可删；不做批量删除，真删只限范围具体、依据清楚的可重建产物（如 `outputs/` 单个过期实验，在实验 `README.md`「运行记录」留一行）。
-7. **初始化是惰性的。** 只读不建；第一次写入才落 `.gitignore`、`README.md`、`STATE.md`（有 Python 时加 `scripts/` 工具集），其余目录用到再建。
+7. **初始化是惰性的。** 只读不建；第一次写入才落 `.gitignore`、`README.md`、`STATE.md`，其余目录用到再建。
 8. **多 agent 只动自己的地盘。** 并行才开 `agents/`：`BOARD.md` 认领即锁，进展写自己的子目录，收尾才写回全局。
 9. **远程是原料。** 增量只进 `remote/`，再反向更新 `STATE.md` / `docs/` / 实验；`cursor.json` 与 `docs/index.md` 是仅有的两处覆盖写。
 
@@ -49,7 +49,7 @@ description: 在项目根的 ./tmp/ 下维护项目记忆、实验记录与当�
 ├── outputs/             # 所有程序产物；内部结构自定
 ├── annotated/           # 需着重讲解 / 强调的代码
 ├── agents/              # 多 agent 协作：BOARD.md + 各 agent 子目录（并行才建）
-├── scripts/             # 跨实验复用的工具（含 check-memory 工具集）
+├── scripts/             # 实验 / 分析脚本（检查工具不落这里，直接跑 skill 的）
 ├── scratch/             # 真正的草稿，允许随时删
 └── archive/             # 退役内容
     ├── INDEX.md         # 追加式归档索引（原路径 / 去向 / 原因）
@@ -78,7 +78,7 @@ description: 在项目根的 ./tmp/ 下维护项目记忆、实验记录与当�
 | 只增 | 程序产生产物 | `outputs/` | 内部结构自定，不覆盖历史产物 |
 | 只增 | 实验完成 / 文档与阅读版退役 | `archive/` | 移动不删；退役文档加「被 X 取代」链接 |
 | 少而稳定 | 开新实验 | `experiments/EXP-XXXX-slug/` | 定义与结论；不装运行产物 |
-| 少而稳定 | 工具第二次复用 | `scripts/` | 跨实验复用的工具，不放实验专属脚本 |
+| 少而稳定 | 项目脚本第二次复用 | `scripts/` | 跨实验复用的项目脚本（检查工具不复制，见「索引与检验」） |
 | 生成 | 实验开始 / 结论更新 / 整理后 | `experiments/INDEX.md` | ID / 状态 / 问题 / 结论 / 更新；`index-experiments.py` 生成 |
 | 只增 | 每次归档 | `archive/INDEX.md` | 日期 / 原路径 / 归档到 / 原因或取代者 |
 | 稳定后沉淀 | 决策 / 约定 / 架构 / 坑 | `docs/memory/` | 背景 → 决定 → 理由与代价 → 引用 |
@@ -135,20 +135,22 @@ description: 在项目根的 ./tmp/ 下维护项目记忆、实验记录与当�
 
 **`archive/INDEX.md`（追加）**：每次归档追加一行——日期、原路径、归档到、原因 / 被谁取代。它是“当初为什么放弃”的检索入口，不做生成器。
 
-**`scripts/` 工具集（Python 3 标准库；共享逻辑在 `memory_lib.py`）**：
+**检查工具（Python 3 标准库；共享逻辑在 `memory_lib.py`）**：就在本 skill 的 `assets/` 里，**不复制进项目**——复制会让每个项目各留一份会过期的副本，改了工具也传不过去。下称 `$SKILL` 为本 skill 所在目录（如 `~/.config/opencode/skills/project-memory`）：
 
 ```bash
-python tmp/scripts/check-memory.py               # 结构 / 引用 / 主题 / 整理阈值
-python tmp/scripts/check-memory.py --json        # 机器可读
-python tmp/scripts/check-memory.py --limit 0     # 列表不截断（默认每类 40 条）
-python tmp/scripts/find-memory.py --tag storage  # 按 tag 找路径（可重复，多个为 AND）
-python tmp/scripts/find-memory.py --untagged     # 没有 tag 的文档
-python tmp/scripts/find-memory.py --orphans      # 孤儿清单
-python tmp/scripts/index-memory.py               # 生成 docs/index.md
-python tmp/scripts/index-experiments.py          # 生成 experiments/INDEX.md
+python "$SKILL/assets/check-memory.py"               # 结构 / 引用 / 主题 / 整理阈值
+python "$SKILL/assets/check-memory.py" --json        # 机器可读
+python "$SKILL/assets/check-memory.py" --limit 0     # 列表不截断（默认每类 40 条）
+python "$SKILL/assets/find-memory.py" --tag storage  # 按 tag 找路径（可重复，多个为 AND）
+python "$SKILL/assets/find-memory.py" --untagged     # 没有 tag 的文档
+python "$SKILL/assets/find-memory.py" --orphans      # 孤儿清单
+python "$SKILL/assets/index-memory.py"               # 生成 docs/index.md
+python "$SKILL/assets/index-experiments.py"          # 生成 experiments/INDEX.md
 ```
 
-首行的 `toolset N` 是工具集版本，当前是 **toolset 2**；与 `assets/` 里 `memory_lib.py` 的 `TOOLSET_VERSION` 不一致，说明项目里的 `tmp/scripts/` 是旧副本，重新复制一次。
+在项目根执行时不用传 `--root`：脚本会从当前目录往上找带 `STATE.md` / `docs/` 的 `./tmp/`。在子目录里跑、或想指到别处时显式写 `--root <项目根>/tmp`。
+
+首行的 `toolset N` 只是工具版本标识（当前 **toolset 2**）。项目里如果还留着旧版复制出来的 `tmp/scripts/`，`check-memory.py` 会提示——直接删掉那个目录即可。
 
 **增量缓存**：解析结果存在 `tmp/.memory-cache.json`，按 `mtime + size + 活目录归属` 命中，三个命令共享；可随时删，`--no-cache` 强制全量解析。缓存文件不参与检查。
 
@@ -263,7 +265,7 @@ tags: [storage, cache-eviction]
 3. 确保 `.gitignore` 有 `/tmp/`；已有规则就不重复加。
 4. 复制 `assets/tmp-readme.md` 成 `./tmp/README.md`。
 5. `./tmp/STATE.md` 落一个最小骨架（见下）。
-6. 复制 `assets/` 下的工具集到 `./tmp/scripts/`（`memory_lib.py` + `check-memory.py` / `find-memory.py` / `index-memory.py` / `index-experiments.py`；有 Python 3 才需要，没有就跳过并在当天 journal 记一句）。skill 更新后 `check-memory.py` 首行的 `toolset N` 会与新版不一致——那说明副本旧了，重新复制即可。
+6. **不复制工具**：检查 / 索引脚本直接从本 skill 的 `assets/` 运行（命令见「索引与检验」），`./tmp/` 里不留脚本副本。项目里若已有旧版的 `tmp/scripts/`，提示用户可以删掉。
 7. **只创建这次要写的路径**（加上面的入口文件）；其余目录用到再建。
 
 第 3、4 步是**不可逆保护**：少了 `.gitignore`，过程记忆会被提交进版本库、以后 `git clean -fdx` 会连它一起清掉；少了 `README.md`，以后没人知道这个目录不是垃圾。

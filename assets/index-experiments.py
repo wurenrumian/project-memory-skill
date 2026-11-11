@@ -71,7 +71,7 @@ def build(root: str, rows) -> str:
     lines = [
         "# 实验索引",
         "",
-        "> 生成文件，勿手改。重新生成：`python tmp/scripts/index-experiments.py`",
+        "> 生成文件，勿手改。重新生成：`python \"<skill>/assets/index-experiments.py\"`",
         "",
         "| ID | 状态 | 问题 | 结论 | 最后更新 |",
         "|---|---|---|---|---|",
@@ -89,12 +89,12 @@ def build(root: str, rows) -> str:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="index-experiments：生成 experiments/INDEX.md")
-    ap.add_argument("--root", default=None, help="tmp 根目录（默认脚本上级目录）")
+    ap.add_argument("--root", default=None, help="tmp 根目录（默认从当前目录往上找 ./tmp/）")
     args = ap.parse_args(argv)
 
     root = args.root or default_root(__file__)
     if not os.path.isdir(root):
-        print(f"不是目录：{root}", file=sys.stderr)
+        print(f"不是目录：{root}（未传 --root 时，脚本从当前目录往上找带 STATE.md / docs/ 的 ./tmp/）", file=sys.stderr)
         return 2
 
     rows = collect(root)

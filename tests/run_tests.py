@@ -133,6 +133,30 @@ def main():
             json.dumps(data.get("tagIssues"), ensure_ascii=False),
         )
 
+        # 工具不再复制进项目：在项目根直接跑 skill 的脚本，--root 可省。
+        env = dict(os.environ, PYTHONIOENCODING="utf-8")
+        r = subprocess.run(
+            [sys.executable, CHECK],
+            cwd=vault,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            env=env,
+        )
+        check(
+            "不传 --root 时从当前目录往上找 ./tmp/",
+            "missing-note" in r.stdout and "歧义链接 1" in r.stdout,
+            r.stdout + r.stderr,
+        )
+
+        # 旧版会把工具集复制进 tmp/scripts/：现在应该提示删掉。
+        legacy = os.path.join(vault, "scripts")
+        os.makedirs(legacy)
+        shutil.copy(os.path.join(ASSETS, "memory_lib.py"), legacy)
+        r = run(CHECK, vault)
+        check("检出旧副本并提示删掉", "旧副本" in r.stdout and "scripts/memory_lib.py" in r.stdout, r.stdout)
+        shutil.rmtree(legacy)
+
         cache = os.path.join(vault, ".memory-cache.json")
         check("增量缓存已生成", os.path.isfile(cache))
 
