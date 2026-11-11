@@ -35,7 +35,7 @@
 | `agents/` | 多 agent 协作：BOARD.md 任务板 + 各 agent 子目录 | 否 |
 | `scripts/` | 跨实验复用的工具（含 check-memory 工具集） | 否 |
 | `scratch/` | 草稿、一次性文件 | **可以** |
-| `archive/` | 退役内容：`INDEX.md` + `journal/YYYY-MM/`、`remote/YYYY-MM/`、`docs/`、`EXP-XXXX-slug/` | 否 |
+| `archive/` | 退役内容：`INDEX.md` + `journal/YYYY-MM/`、`remote/YYYY-MM/`、`docs/`、`annotated/`、`EXP-XXXX-slug/` | 否 |
 
 > 目录按需创建：还没出现的目录只是还没用到。
 

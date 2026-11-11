@@ -56,6 +56,7 @@ description: 在项目根的 ./tmp/ 下维护项目记忆、实验记录与当�
     ├── journal/YYYY-MM/ # 滚动归档的旧日志
     ├── remote/YYYY-MM/  # 滚动归档的旧同步摘要
     ├── docs/            # 退役文档
+    ├── annotated/       # 退役的阅读版（geeklens 的产物）
     └── EXP-XXXX-slug/   # 归档的实验
 ```
 
@@ -75,7 +76,7 @@ description: 在项目根的 ./tmp/ 下维护项目记忆、实验记录与当�
 | 只增 | 同步远程增量 | `remote/YYYY-MM-DD.md` | 范围、合入与关闭的 PR、“对我方的影响” |
 | 指针 | 每次同步收尾 | `remote/cursor.json` | 新水位；覆盖写，不做历史 |
 | 只增 | 程序产生产物 | `outputs/` | 内部结构自定，不覆盖历史产物 |
-| 只增 | 实验完成 / 文档退役 | `archive/` | 移动不删；退役文档加「被 X 取代」链接 |
+| 只增 | 实验完成 / 文档与阅读版退役 | `archive/` | 移动不删；退役文档加「被 X 取代」链接 |
 | 少而稳定 | 开新实验 | `experiments/EXP-XXXX-slug/` | 定义与结论；不装运行产物 |
 | 少而稳定 | 工具第二次复用 | `scripts/` | 跨实验复用的工具，不放实验专属脚本 |
 | 生成 | 实验开始 / 结论更新 / 整理后 | `experiments/INDEX.md` | ID / 状态 / 问题 / 结论 / 更新；`index-experiments.py` 生成 |
@@ -176,7 +177,7 @@ python tmp/scripts/index-experiments.py          # 生成 experiments/INDEX.md
 4. **重生成索引**：`index-memory.py` 与 `index-experiments.py`。
 5. **记一笔**：当天 journal 一行，写清搬了哪些、退役了哪些、修了几条链接。
 
-**淘汰是移动，不是删除**：合并 = 内容进新篇 + 旧篇留「被 X 取代」链接；退役 = 整篇移 `archive/docs/`。不重写正文、不替用户做合并决定、不动别人进行中的工作。
+**淘汰是移动，不是删除**：合并 = 内容进新篇 + 旧篇留「被 X 取代」链接；退役 = 整篇移 `archive/docs/`，阅读版移 `archive/annotated/`。不重写正文、不替用户做合并决定、不动别人进行中的工作。
 
 ## 常用操作
 
@@ -210,7 +211,7 @@ python tmp/scripts/index-experiments.py          # 生成 experiments/INDEX.md
 
 - `STATE.md`：`## 现在` → `## 进行中` → `## 下一步` → `## 待决 / 阻塞` → `## 关键链接` → `## 已毕业`（骨架见「惰性初始化」）。
 - 实验 `README.md`：`状态` → `问题` → `假设` → `方法` → `结果` → `结论` → `未决` → `运行记录`（每行指向 `outputs/` 实际产物）。初期只填到「方法」，跑完再补结论。
-- `annotated/<topic-slug>`：形态不限——`<slug>.md` 纯讲解、`<slug>.<ext>` 带注释的源码片段、`<slug>/` 主题目录。**硬要求**：从项目源码摘来的代码记来源（路径 + commit/日期），放文件顶部或同目录 README。
+- `annotated/<topic-slug>`：形态不限——`<slug>.md` 纯讲解、`<slug>.<ext>` 带注释的源码片段、`<slug>/` 主题目录（**默认单文件，多份文件才建目录**；geeklens 产出的阅读版走这一格）。**硬要求**：`tags` 写在 front-matter（第一个是主 tag，`find-memory.py --tag` 靠它找到），从项目源码摘来的代码记来源（路径 + commit/日期），放文件顶部或同目录 README。
 - `docs/` 的演示类内容无独立形态要求——slides、一页纸、demo 脚本、html 成品放文档旁或同目录 `assets/` 即可。
 
 ### 文档 front-matter（极简）
