@@ -48,7 +48,7 @@ GitLab 用 `glab mr list --merged-after=<date>` 同构替换，规则一致。
 git symbolic-ref --short refs/remotes/origin/HEAD   # → origin/main 或 origin/master
 ```
 
-- `cursor.json` 是 `./tmp/` 里唯一允许覆盖的文件。它是指针，不是历史；覆盖它不违反"产物不覆盖"。覆盖用「写临时文件再 rename / 移动替换」，别原地改写——半截 JSON 会让下次同步解析挂掉（同 §6.8）。
+- `cursor.json` 是 `./tmp/` 里仅有的两处覆盖写之一（另一处是生成的 `docs/index.md`）。它是指针，不是历史；覆盖它不违反"产物不覆盖"。覆盖用「写临时文件再 rename / 移动替换」，别原地改写——半截 JSON 会让下次同步解析挂掉（同 §6.8）。
 
 ---
 
@@ -138,7 +138,7 @@ gh pr list --state open --search "updated:>=$SINCE" --limit 50 \
 
 ## 对我方的影响
 
-- `docs/memory/storage-latency-model.md` 被 #124 改动 → 复核数字与「来源」
+- `docs/memory/storage-latency-model.md` 被 #124 改动 → 复核数字与「引用」
 - STATE「待决」#2（等上游分片方案）已被 #124 解决 → 候选收尾
 ```
 
@@ -153,7 +153,7 @@ gh pr list --state open --search "updated:>=$SINCE" --limit 50 \
 | 远程变化 | 动作 | 落到哪 |
 |---|---|---|
 | 让「待决 / 阻塞」某条过时 | 改写或移走，别一直挂着 | `STATE.md` |
-| 改到某篇 `docs/` 讲的东西 | 复核；过时标 `status: deprecated`，内容变了更新 `updated` + 补「来源」 | `docs/**` |
+| 改到某篇 `docs/` 讲的东西 | 复核；过时就退役（加「被 X 取代」链接后移 `archive/docs/`），内容变了补「引用」与相关链接 | `docs/**` |
 | 改到实验依赖的代码 / 数据 | 记一句可复现性风险 | 实验 `README.md`「未决」 |
 | 只跟别人有关 | 不动 | 留在 `remote/` |
 
@@ -175,7 +175,7 @@ gh pr list --state open --search "updated:>=$SINCE" --limit 50 \
 5. **时区边界。** 全用带偏移的本地时间；`--since` / `>=` 的比较边界可能重叠或漏掉一两分钟，靠 sha 区间和摘要范围判重，别追求零误差。
 6. **cursor 是每个 checkout 一份。** `./tmp/` 不进版本库，多 worktree / 多机器各同步各的，同一段范围可能被各记一次。这不冲突，但不自动对齐（同 `multi-agent.md` 的限制）。
 7. **原始 JSON 不用存 `outputs/`。** 随手可重取；只有需要留证据（比如事后核对"当时确实合入了"）才落盘。
-8. **同步失败不要留半截水位。** 顺序永远是：摘要落盘 → 再推 cursor。中途失败就停在旧水位，下次重算，最坏是重复，不是丢失；推 cursor 本身用「临时文件 + rename」，即使进程写一半被杀，留在盘上的也是完整旧水位，不是坏文件。
+8. **同步失败不要留半截水位。** 顺序永远是摘要落盘 → 再推 cursor；推 cursor 用「临时文件 + rename」（见 §1）。中途失败就停在旧水位，下次重算，最坏是重复，不是丢失。
 
 ## 检查清单
 

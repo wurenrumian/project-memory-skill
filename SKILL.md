@@ -1,181 +1,233 @@
 ---
 name: project-memory
-description: 在项目根的 ./tmp/ 下维护项目记忆、实验记录与当前状态（过程进 ./tmp/，结论进 ./docs/）。当用户要记录一下、记个结论、维护项目状态 / 当前进度 / 下一步、写研究记录或实验记录、整理探索笔记、这些先别放进 docs，或提到 project memory、journal、experiment run、多 agent 协作时使用。Maintain project memory, research notes, experiment records and current state under ./tmp/.
+description: 在项目根的 ./tmp/ 下维护项目记忆、实验记录与当前状态（过程进 ./tmp/，结论进 ./docs/）。当用户要记录一下、记个结论、维护项目状态 / 当前进度 / 下一步、写研究记录或实验记录、整理探索笔记、整理 / 清理 tmp、按 tag 找文档、检查文档断链与孤儿、这些先别放进 docs，或提到 project memory、journal、experiment run、文档索引、多 agent 协作时使用。Maintain project memory, research notes, experiment records and current state under ./tmp/.
 ---
 
 # Project Memory
 
 在项目根的 `./tmp/` 下维护一份**过程性记忆**：项目记忆、研究讲解、脚本、实验记录、实验结果、当前状态与后续方向。
 
-它**不是**项目文档，也**不是**随时可清的临时目录：`./docs/` 是给项目读者的结论，`./tmp/` 是产生这些结论的过程，里面有失败的、没定论的、以及"当初为什么放弃"的记录。
+它**不是**项目文档，也**不是**随时可清的临时目录：`./docs/` 是给项目读者的结论，`./tmp/` 是产生这些结论的过程——失败的、没定论的、以及“当初为什么放弃”的记录都在这里。
 
 ## 核心规则
 
-1. **`./tmp/` 只放过程，项目 `./docs/` 只放结论。** 探索中的、失败的、临时的、还没定论的内容一律进 `./tmp/`；只有稳定且对项目有价值的内容才"毕业"到 `./docs/`，并在 `STATE.md` 记一笔。
+1. **过程进 `./tmp/`，结论进 `./docs/`。** 毕业时在 `STATE.md` 记一笔，说明从哪来、到哪去。
 2. **实验定义与运行产物分开。** 定义在 `experiments/`（小、稳定、人读），产物在 `outputs/`（多、只增、程序写）。
-3. **捕获便宜，沉淀才排版。** 日常只往 `journal/` 追加一行；只有结论稳定了才写 `docs/`。不要边做边写文档。
-4. **产物不覆盖。** 每次运行写独立目录，程序产物进 `outputs/`，内部结构由程序决定，skill 不限制；但别覆盖历史产物。
-5. **入口唯一。** 任何需要"了解现状"的场合，先读 `./tmp/STATE.md`，不要通读整个 `./tmp/`。
-6. **删除是最后手段。** 顶层（除 `scratch/` 外）**不要用 `git clean`、清理脚本或手工批量删除**；只有 `scratch/` 可以随时删。唯一例外：`outputs/` 里**单个过期实验**的产物可以删或移 `archive/`（在实验 `README.md`「运行记录」留一行），但同样不整目录批量清。完成 / 废弃的东西移进 `archive/`，不删——记忆的价值常在"想起当初为什么放弃"。
-7. **初始化是惰性的。** 只读不建任何东西；第一次**写入**时才落最小集合（`.gitignore` 规则、`README.md`、`STATE.md`），其余目录用到哪个建哪个。
-8. **多 agent 只动自己的地盘。** 多个 agent 并行干活才开 `agents/`：任务上 `agents/BOARD.md` 认领（认领即锁），进展写自己的 `agents/<agent-id>/`；全局 `STATE.md` 只在收尾时汇总。
-9. **远程信息是原料，落点是本地记忆。** 远程仓库的提交 / PR 增量只进 `remote/`，再由它**反过来**更新 `STATE.md`、`docs/`、`experiments/`；别把远程的措辞直接搬成本地结论，也别凭远程变化擅自改动别人正在进行的工作。`remote/cursor.json` 是 `./tmp/` 里**唯一允许覆盖**的文件——它是指针，不是历史。
+3. **捕获便宜，沉淀才排版。** 日常只追加 `journal/` 一行；值得长期查阅才升级到 `docs/`（门槛见下）。
+4. **产物不覆盖。** 每次运行写独立目录，`outputs/` 内部结构由程序决定。
+5. **两个入口。** 看现状读 `./tmp/STATE.md`，找文档看 `./tmp/docs/index.md`；不必通读整个 `./tmp/`。
+6. **移动是常态，删除是例外。** 退役内容进 `archive/`，`scratch/` 随时可删；不做批量删除，真删只限范围具体、依据清楚的可重建产物（如 `outputs/` 单个过期实验，在实验 `README.md`「运行记录」留一行）。
+7. **初始化是惰性的。** 只读不建；第一次写入才落 `.gitignore`、`README.md`、`STATE.md`（有 Python 时加 `scripts/` 工具集），其余目录用到再建。
+8. **多 agent 只动自己的地盘。** 并行才开 `agents/`：`BOARD.md` 认领即锁，进展写自己的子目录，收尾才写回全局。
+9. **远程是原料。** 增量只进 `remote/`，再反向更新 `STATE.md` / `docs/` / 实验；`cursor.json` 与 `docs/index.md` 是仅有的两处覆盖写。
 
 ## 目录结构
 
-`./tmp/` 是这份记忆的唯一根，**整个目录默认不进版本库**。顶层（除 `scratch/` 外）受"不可随意删"约定保护（见核心规则 6）。
-
-目录**按需创建**：下面列的是「该放哪」，不是「启动时就要全建出来」。没出现的目录只是还没用到，需要时再建；它是否真实存在不影响这些约定。
+`./tmp/` 是这份记忆的唯一根，**整个目录默认不进版本库**；顶层（除 `scratch/` 外）受“不可随意删”约定保护。目录**按需创建**：下面列的是「该放哪」，不是「启动时就要全建出来」。
 
 ```
 ./tmp/
-├── README.md            # 这目录是什么、"顶层不可随意删"的约定、入口指引（人读一次）
+├── README.md            # 这目录是什么、约定与入口指引（人读一次）
 ├── STATE.md             # 【必读】现在 / 进行中 / 下一步 / 待决 / 关键链接
+├── .memory-cache.json   # 检查工具的增量缓存（可删，不参与检查）
 ├── journal/
 │   └── 2026-09-27.md    # 追加式时间线，一天一个文件
 ├── remote/              # 远程仓库增量（同步过才有）
-│   ├── cursor.json      # 水位：同步到哪个 sha / 哪一刻；唯一允许覆盖的文件
+│   ├── cursor.json      # 水位；覆盖写（指针）
 │   └── 2026-09-29.md    # 每次同步追加一节，只增不改
-├── docs/                # 沉淀后的稳定内容；演示材料等也放这，形式自由
+├── docs/                # 沉淀后的内容；演示材料等也放这，形式自由
+│   ├── index.md         # 生成的全量索引 + 近期活跃；不手改
 │   ├── memory/          # 决策、架构、约定、踩过的坑
 │   ├── research/        # 研究讲解 / 分析长文 / 论文笔记
 │   └── plans/           # 不动手验证的方案、路线图、想法（动手验证就开实验）
 ├── experiments/         # 实验的「定义与结论」——小、稳定、人读
+│   ├── INDEX.md         # 生成的实验索引（状态 / 问题 / 结论）
 │   └── EXP-0001-slug/
 │       ├── README.md    # 问题/假设/方法/结果/结论/未决
 │       ├── config.yaml  # 该实验固定参数
 │       └── scripts/     # 实验专属脚本（可复用时才提升到顶层 scripts/）
 ├── outputs/             # 所有程序产物；内部结构自定
 ├── annotated/           # 需着重讲解 / 强调的代码
-├── agents/              # 多 agent 协作：BOARD.md 任务板 + 各 agent 子目录（并行干活才建）
-├── scripts/             # 跨实验复用的工具
+├── agents/              # 多 agent 协作：BOARD.md + 各 agent 子目录（并行才建）
+├── scripts/             # 跨实验复用的工具（含 check-memory 工具集）
 ├── scratch/             # 真正的草稿，允许随时删
-└── archive/             # 完成 / 废弃的东西移到这里，不删
+└── archive/             # 退役内容
+    ├── INDEX.md         # 追加式归档索引（原路径 / 去向 / 原因）
+    ├── journal/YYYY-MM/ # 滚动归档的旧日志
+    ├── remote/YYYY-MM/  # 滚动归档的旧同步摘要
+    ├── docs/            # 退役文档
+    └── EXP-XXXX-slug/   # 归档的实验
 ```
+
+产物**不进 `experiments/`**：定义少而稳、产物多而只增，分开后大文件集中在一处，归档实验时不会漏带数据。产物位置只记**一处**——有归属实验的记进实验 `README.md`「运行记录」，没归属的记当天 `journal/`。
 
 `assets/tmp-readme.md` 是这份目录表的落盘版（首次写入时原样复制）；改目录结构时两处一起改。
 
-### 为什么产物独立于实验
-
-实验**定义**和运行**产物**生命周期相反：定义少、稳定、小、人读；产物多、只增、可能巨大、程序写。所以**产物写进固定的 `outputs/` 根，不写进 `experiments/`**——这样大文件集中在一处，过期产物的删除边界清楚（见核心规则 6 的唯一例外），归档实验时不会漏掉或误带一堆数据。
-
-`outputs/` 内部不设任何约定，由产生它的程序决定。代价是从产物反推属于哪个实验要另找线索，所以纪律放在写它的人这边：产物位置**记一个地方**——有归属实验的记进实验 `README.md`「运行记录」，没归属的记当天 `journal/`，不要两处都记，也别一处都不记。
-
 ## 写入协议
 
-默认**只追加 `journal/`**；只有结论稳定、以后还会被引用时，才升级到 `docs/`（门槛见下）。
+默认**只追加 `journal/`**；值得长期查阅时才升级到 `docs/`（门槛见「`docs/` 的门槛」）。
 
-| 生命周期 | 什么时候 | 写到哪 | 装什么 · 不装什么 |
+| 生命周期 | 什么时候 | 写到哪 | 装什么 |
 |---|---|---|---|
-| 入口 | 会话收尾 | `STATE.md` | 现在 / 进行中 / 下一步 / 待决 / 关键链接；覆盖更新，<150 行；不装知识本身、细节 |
-| 入口 | 首次写入一次 | `README.md` | 声明这是记忆、列目录与约定 |
-| 只增不改 | 任何"以后可能有用"的观察 / 想法 / 进展 | `journal/YYYY-MM-DD.md` | 一行一条，不排版；不装排版好的长文 |
-| 只增不改 | 同步远程增量 | `remote/YYYY-MM-DD.md` | 本次范围（sha / 时间区间）、合入与关闭的 PR、"对我方的影响"；不装 diff、不装原始 JSON |
-| 指针 | 每次同步收尾 | `remote/cursor.json` | 新水位；这是唯一允许覆盖的文件 |
-| 只增不改 | 程序产生产物 | `outputs/` | 内部结构自定；不覆盖历史产物 |
-| 只增不改 | 实验做完 / 想法废弃 | `archive/` | 移动，不删；不装仍在进行的工作 |
+| 入口 | 会话收尾 | `STATE.md` | 现在 / 进行中 / 下一步 / 待决 / 关键链接；覆盖更新，<150 行 |
+| 入口 | 首次写入 | `README.md` | 声明这是记忆、列目录与约定 |
+| 只增 | 任意观察 / 想法 / 进展 | `journal/YYYY-MM-DD.md` | 一行一条，不排版 |
+| 只增 | 同步远程增量 | `remote/YYYY-MM-DD.md` | 范围、合入与关闭的 PR、“对我方的影响” |
+| 指针 | 每次同步收尾 | `remote/cursor.json` | 新水位；覆盖写，不做历史 |
+| 只增 | 程序产生产物 | `outputs/` | 内部结构自定，不覆盖历史产物 |
+| 只增 | 实验完成 / 文档退役 | `archive/` | 移动不删；退役文档加「被 X 取代」链接 |
 | 少而稳定 | 开新实验 | `experiments/EXP-XXXX-slug/` | 定义与结论；不装运行产物 |
-| 少而稳定 | 工具第二次复用时 | `scripts/` | 跨实验复用的工具，不放单个实验专属脚本 |
-| 稳定后沉淀 | 一个决策 / 约定 / 架构 / 坑定下来 | `docs/memory/` | 背景 → 决定 → 理由与代价 → 来源 |
+| 少而稳定 | 工具第二次复用 | `scripts/` | 跨实验复用的工具，不放实验专属脚本 |
+| 生成 | 实验开始 / 结论更新 / 整理后 | `experiments/INDEX.md` | ID / 状态 / 问题 / 结论 / 更新；`index-experiments.py` 生成 |
+| 只增 | 每次归档 | `archive/INDEX.md` | 日期 / 原路径 / 归档到 / 原因或取代者 |
+| 稳定后沉淀 | 决策 / 约定 / 架构 / 坑 | `docs/memory/` | 背景 → 决定 → 理由与代价 → 引用 |
 | 稳定后沉淀 | 研究讲解 / 分析 / 论文笔记 | `docs/research/` | 一句话 → 正文 → 证据 → 未决 |
-| 稳定后沉淀 | 不动手验证的新方案 / 路线图 / 想法 | `docs/plans/` | 目标 → 方案 → 备选与取舍 → 验证方式；动手验证就开实验 |
-| 稳定后沉淀 | 想讲清某段代码 | `annotated/<slug>(.md \| .<ext> \| /)` | 围绕代码讲；摘来的代码必记来源 |
-| 并行协作 | 多个 agent 同时干活 | `agents/` | 任务在 `agents/BOARD.md` 认领（认领即锁）；进展写各自子目录；不装单 agent 工作流 |
+| 稳定后沉淀 | 不动手验证的方案 / 路线图 | `docs/plans/` | 目标 → 方案 → 备选与取舍 → 验证方式 |
+| 稳定后沉淀 | 讲清某段代码 | `annotated/<slug>` | 围绕代码讲；摘来的代码记来源（路径 + commit/日期） |
+| 生成 | 写完文档 / 整理后 | `docs/index.md` | 全量索引 + 近期活跃；`index-memory.py` 生成，不手改 |
+| 并行协作 | 多个 agent 同时干活 | `agents/` | 任务在 `BOARD.md` 认领（认领即锁），进展写各自子目录 |
 | 可丢 | 随手草稿 | `scratch/` | 唯一可任意删除的区域 |
 
-**几条容易搞错的**：
+两条容易混的分界：
 
-- **产物永不进 `experiments/`**，一律进 `outputs/`；内部怎么组织由程序决定。
-- **实验专属脚本放实验目录，被第二个实验复用时才提升到 `scripts/`。**
-- **`annotated/` 里的代码要记来源**（原文件路径 + commit/日期），否则会悄悄和真实源码漂移；摘来的是副本不是真源，改动请回项目源码。
-- **`docs/` 与 `annotated/` 按"读者在什么状态读"区分**：`docs/` 是随时查的参考（演示材料、成品、讲稿也都放这），`annotated/` 是围着代码讲实现。拿不准就问"这东西是给谁、在什么场合用的"。
+- **`docs/` 文档 = H1 + 正文 + `tags` + 引用链接**；没有 status / title / date 字段，位置即状态。
+- **`docs/` 与 `annotated/`**：前者是随时查的参考（演示、成品、讲稿也放这），后者围着代码讲实现。
 
 ## 冷启动协议
 
 需要了解项目当前状态、或继续之前的工作时：
 
-1. 读 `./tmp/STATE.md`。不存在说明还没有任何记忆，按空状态继续——**只读不初始化**。
+1. 读 `./tmp/STATE.md`。不存在说明还没有记忆，按空状态继续——**只读不初始化**。
 2. 读最新一个 `./tmp/journal/*.md` 的尾部。
-3. 看 `./tmp/remote/cursor.json`（存在才看）：与 `git log -1 --format=%h origin/main` 对不上、或 `synced_at` 已过一周，就**提示**用户"远程有变化，要不要同步一次"——只提示，不自动 `fetch` / `gh`（冷启动保持只读、不联网）。
-4. 按 `STATE.md` 的「关键链接」按需读对应 `docs/` 文档或 `experiments/*/README.md`；存在 `./tmp/agents/` 时顺带看一眼 `agents/BOARD.md` 的认领情况。
-5. 只在必要时才深入 `outputs/`。
+3. 看 `./tmp/remote/cursor.json`（存在才看）：与 `git log -1 --format=%h origin/main` 对不上、或 `synced_at` 已过一周，就**提示**用户同步——只提示，不自动 `fetch` / `gh`。
+4. 按「关键链接」按需读文档；找实验状态读 `./tmp/experiments/INDEX.md`，找文档读 `./tmp/docs/index.md`，不扫目录。存在 `agents/` 时看一眼 `BOARD.md`。
+5. 只在必要时深入 `outputs/`；怀疑文档过期时跑 `check-memory.py` 看孤儿与断链，不凭印象判断。
 
 ## 远程增量同步
 
-**解决的问题**：`journal/` 记的都是"我方做过什么"。别的机器、别的 agent、同事推到远程的东西，本地记忆里是空白。同步把「上次同步 → 现在」这段远程变化拉进 `./tmp/`，再**反过来更新本地记忆**。
+**什么时候做**：用户 `pull` / `fetch` 之后，或用户说“同步一下远程”；冷启动只提示不执行。
 
-**什么时候做**：用户 `pull` / `fetch` 之后，或用户说"同步一下远程 / 看看远程有什么变化"。冷启动只提示不执行。
+**三步，顺序不能换**（命令、PR 分类、摘要模板与坑见 `references/remote-sync.md`）：
 
-**三步，顺序不能换**（命令、PR 分类规则、摘要模板与坑都在 `references/remote-sync.md`）：
+1. **算增量**：`git fetch --prune` 后取 git / PR 增量；没有 `gh` / 非 GitHub 就只做 git 侧，摘要头部标**降级**。
+2. **写摘要** `remote/YYYY-MM-DD.md`：头部写清范围（sha 区间 + 时间区间），每次同步追加一节。
+3. **推水位** `remote/cursor.json`：写临时文件再 rename，避免半截 JSON。
 
-1. **算增量**：`git fetch --prune` 后取 git / PR 增量；没有 `gh` / 非 GitHub 就只做 git 侧，摘要头部标一行**降级**，别假装拿全了。
-2. **写摘要** `remote/YYYY-MM-DD.md`：头部写清本次范围（sha 区间 + 时间区间），靠范围判重；每次同步追加一节。
-3. **推水位** `remote/cursor.json`：用「写临时文件 + rename」覆盖，避免半截 JSON 让下次解析挂掉。
+> **先写摘要、后推水位。** 反过来，中途失败会让那段增量永久丢失。
 
-> **先写摘要、后推水位。** 反过来的话，中途失败会让那段增量永久丢失（水位已越过，摘要没落地）。
+**然后反向更新本地记忆**：按摘要里的 `## 对我方的影响` 收过时待决、复核被改到的 `docs/`、更新实验「未决」；无关的别人进展留在 `remote/`。`journal/` 只记一行指针。
 
-**然后才是重点：拿远端的东西反向更新本地记忆。** 摘要里的 `## 对我方的影响` 一节就是为这步准备的（哪些远程变化动 `STATE.md` / `docs/` / 实验 README 的对照表见 `references/remote-sync.md` §5）：过时的待决收掉，被改到过的 `docs/` 复核，无关的别人进展留在 `remote/`。`journal/` 只记一行指针，不抄内容。
+两条纪律：**远程的措辞不等于我们的结论**——进 `STATE.md` / `docs/` 必须用自己的话重写；**cursor 是每个 checkout 一份**——多 worktree / 多机器各同步各的，不冲突，但不自动对齐。
 
-两条纪律：**远程的措辞不等于我们的结论**——摘要里可以照抄 PR 标题，`STATE.md` / `docs/` 里必须用我们自己的话重写，否则等于把别人的视角当了事实；**cursor 是每个 checkout 一份**（`./tmp/` 不进版本库）——多 worktree / 多机器各同步各的，同一段范围可能被各记一次，不冲突，但不自动对齐（同 `references/multi-agent.md` 的限制）。
+## 索引与检验
+
+**为什么**：文档一多，靠目录和记忆找东西必然失效。生成式索引 + 检查脚本让“有哪些文档、哪些没人用、哪些链接断了”变成可查的数字。
+
+**`docs/index.md`（生成，不手改）**：
+
+- 「正在关注」：近 30 天有**文件活动**的 tag，按最近活跃排序，带文档数、最近日期、入链数——工作区最近在碰什么的启发式视图；
+- 「全部文档」：按主 tag（第一个 tag）分组，每篇一行：wiki 链接 + 首段首句 + 入链数 + 最后更新。
+
+> mtime 受复制、解压、checkout 影响，所以“正在关注”是启发式，不代表主题重要性或人工关注状态。
+
+**`experiments/INDEX.md`（生成）**：从每个实验 README 的 `状态 / 问题 / 结论` 小节生成，一行一个；归档实验标 `archived`；由 `index-experiments.py` 维护。
+
+**`archive/INDEX.md`（追加）**：每次归档追加一行——日期、原路径、归档到、原因 / 被谁取代。它是“当初为什么放弃”的检索入口，不做生成器。
+
+**`scripts/` 工具集（Python 3 标准库；共享逻辑在 `memory_lib.py`）**：
+
+```bash
+python tmp/scripts/check-memory.py               # 结构 / 引用 / 主题 / 整理阈值
+python tmp/scripts/check-memory.py --json        # 机器可读
+python tmp/scripts/check-memory.py --limit 0     # 列表不截断（默认每类 40 条）
+python tmp/scripts/find-memory.py --tag storage  # 按 tag 找路径（可重复，多个为 AND）
+python tmp/scripts/find-memory.py --untagged     # 没有 tag 的文档
+python tmp/scripts/find-memory.py --orphans      # 孤儿清单
+python tmp/scripts/index-memory.py               # 生成 docs/index.md
+python tmp/scripts/index-experiments.py          # 生成 experiments/INDEX.md
+```
+
+首行的 `toolset N` 是工具集版本，当前是 **toolset 1**；与 `assets/` 里 `memory_lib.py` 的 `TOOLSET_VERSION` 不一致，说明项目里的 `tmp/scripts/` 是旧副本，重新复制一次。
+
+**增量缓存**：解析结果存在 `tmp/.memory-cache.json`，按 `mtime + size + 活目录归属` 命中，三个命令共享；可随时删，`--no-cache` 强制全量解析。缓存文件不参与检查。
+
+报告分四类：**结构**（断链、裸 basename 歧义、`docs/` 重名，退出码 1）、**引用**（孤儿）、**主题**（无 tag 文档、tag 计数与 tag 规范）、**整理**（目录条目数、journal 活跃月份）。四条判定规则：
+
+- 入链只算活引用（`docs/`、`experiments/`、`annotated/`、`STATE.md`）；`journal/`、`remote/`、`archive/`、`scratch/` 既不算入链，也不报断链——它们只追加、不回头整理，报出来也修不了；
+- **孤儿** = 入链 0 且 mtime 超过 30 天的 `docs/` 文档，只是复核线索，不是“该删”的结论；
+- `docs/index.md` 自身不参与检查（否则它列出的每条链接都会变成入链）；
+- 链接按文件系统语义判定：Markdown 链接的 `#锚点` / `?query` 不算路径；指向目录的链接、大小写不一致的 wiki 链接（Windows / macOS）都算有效。
+
+有 Obsidian 1.12+ CLI 的人可以用 `obsidian unresolved` / `orphans` / `backlinks` 人工复核；它需要 app 在运行，脚本是无头等价物。
+
+## 整理与滚动归档
+
+**触发是提示，不是自动**：收尾时跑 `check-memory.py`，「整理」小节会直接给出目录条目数与 journal 活跃月份（不用手动数），满足任一就提示用户“要不要整理一轮”：
+
+- 任一可读目录（`docs/{memory,research,plans}/`、`experiments/`、`annotated/`、`scripts/`、`archive/` 子目录）条目数 ≥ 16（软）/ ≥ 20（硬）；
+- `journal/` 活跃月份超过 2 个；
+- 用户主动说“整理一下”。
+
+`outputs/` 不适用目录长度规则。流程：
+
+1. **滚动归档**：`journal/`、`remote/` 里结束超过 60 天的整月整体移到 `archive/journal/YYYY-MM/`、`archive/remote/YYYY-MM/`；只移动、不重写，`cursor.json` 留在原地。
+2. **跑检查**：修断链；孤儿与无 tag 文档是候选清单，处理前由用户判断（合并 / 移 `archive/docs/`）；`docs/` 内重名先改名再改引用。
+3. **归档完成实验**：状态 done 且「未决」已清空的 → `archive/EXP-XXXX-slug/`，并在 `archive/INDEX.md` 追加一行（日期 / 原路径 / 去向 / 原因或取代者）。
+4. **重生成索引**：`index-memory.py` 与 `index-experiments.py`。
+5. **记一笔**：当天 journal 一行，写清搬了哪些、退役了哪些、修了几条链接。
+
+**淘汰是移动，不是删除**：合并 = 内容进新篇 + 旧篇留「被 X 取代」链接；退役 = 整篇移 `archive/docs/`。不重写正文、不替用户做合并决定、不动别人进行中的工作。
 
 ## 常用操作
 
 | 任务 | 动作 |
 |---|---|
-| 首次写入（惰性初始化） | 见「惰性初始化」：若 `./tmp/` 已存在但无 `README.md` 先问用户；`.gitignore` 追加 → 复制 `assets/tmp-readme.md` → 落 `STATE.md` 骨架；**其余目录用到再建**；建好后告知用户、`scratch/` 可随意删、其余顶层不可批量删（outputs 有单条例外，见核心规则 6） |
-| 开新实验 | 扫 `experiments/` 与 `archive/` 取下一个 `EXP-XXXX`；建 `experiments/EXP-XXXX-slug/{README.md,config.yaml,scripts/}`（**不建产物目录**）；`README.md` 先填到「方法」，结论留空跑完再补；`STATE.md` 与当天 journal 各记一行（多 agent 时中途只记 BOARD 与自己那份，收尾写回 STATE） |
-| 跑脚本 / 记产物 | 产物按「写入协议」落 `outputs/`，不覆盖；位置记**一处** |
-| 同步远程增量 | 见「远程增量同步」：三步走，摘要在前、水位在后，最后做反向更新 |
-| 写代码讲解 | 见「各类文件的结构」的 `annotated/` 段；记好来源 |
-| 多 agent 协作 | 并行干活才启用；任务板、认领与 id 约定见 `references/multi-agent.md` |
-| 沉淀成文档 | 判类型 → `docs/{memory,research,plans}/`；按对应结构写，填全 front-matter（定稿 `status: stable`，演化中标 `draft`）；`STATE.md`「关键链接」挂上；把来源 journal 的时间范围写进「来源」；相关实验的「结论」同步更新 |
-| 毕业到项目 `./docs/` | **先问用户，不要擅自写项目 `docs/`**；同意后按项目 docs 自己的格式**重写**（不是复制 `./tmp/` 的排版）；`STATE.md` 记一行「已毕业：<tmp 路径> → <docs 路径>」；`./tmp/` 原件保留，`status` 标 `deprecated` 或移 `archive/` |
-| 收尾 | 更新 `STATE.md` 的「现在 / 进行中 / 下一步」，已完成的移走或移入 `archive/`；把当天 `journal/` 的结论索引化；有实验完成 → 补「结论」；遗留阻塞写进「待决 / 阻塞」 |
-| 归档 | 实验目录 → `archive/EXP-XXXX-slug/`，对应产物一起移走或删（删则在运行记录留一行）；过时文档先 `status: deprecated`，确无参考价值再移 `archive/` |
+| 收尾 | 更新 `STATE.md` 的「现在 / 进行中 / 下一步」，删掉过期的「关键链接」；索引化当天 `journal/` 结论；实验完成 → 补「结论」；遗留阻塞写进「待决」；顺手看整理阈值 |
+| 开新实验 | 取下一个 `EXP-XXXX`（规则见「格式约定」）；建 `experiments/EXP-XXXX-slug/{README.md,config.yaml,scripts/}`（**不建产物目录**）；`README.md` 先填到「方法」；`STATE.md` 与当天 journal 各记一行（多 agent 时中途只记 BOARD 与自己那份） |
+| 沉淀成文档 | 判类型 → `docs/{memory,research,plans}/`；按对应结构写；`STATE.md`「关键链接」挂上；相关实验「结论」同步；跑 `index-memory.py` |
+| 毕业到项目 `./docs/` | 见 `references/migration.md`：先问用户 → 按项目格式**重写** → `STATE.md` 记一行 → 原件保留或移 `archive/docs/` |
+| 检验 / 生成索引 | `check-memory.py` 检查（`--json` 可机读，`--limit` 控制列表长度）；`find-memory.py` 查 tag / 无 tag / 孤儿；`index-memory.py`、`index-experiments.py` 生成索引；语义见「索引与检验」 |
+| 整理 | 见「整理与滚动归档」；只提示不自动 |
+| 归档 | 实验 / 退役文档移入 `archive/`，并在 `archive/INDEX.md` 追加一行（日期 / 原路径 / 去向 / 原因或取代者） |
+| 同步远程 | 见「远程增量同步」：摘要在前、水位在后，再做反向更新 |
 
 ## 多 agent 协作
 
-多个 agent **同时**在同一个项目里干活才启用；单 agent 时整个 `agents/` 目录不存在，根 `STATE.md` 仍是唯一入口。工作期间只写 BOARD 与自己子目录，收尾才写回全局；若各 agent 在各自的 worktree 里，`./tmp/` 互不共享，这些约定不适用。任务板格式、认领规则与 id 约定见 `references/multi-agent.md`。
+多个 agent **同时**在同一个项目里干活才启用；单 agent 时 `agents/` 不存在，根 `STATE.md` 仍是全局入口。工作期间只写 BOARD 与自己子目录，收尾才写回全局。各 worktree 的 `./tmp/` 互不共享、**不会自动合并**——重要结论要在收尾时显式同步到共享位置，不能假设 BOARD 或本地 `STATE.md` 跨 worktree 可见。任务板格式与认领规则见 `references/multi-agent.md`。
 
 ## 格式约定
 
-- **时间戳**：journal 文件名 `YYYY-MM-DD.md`；文档 front-matter 日期 `YYYY-MM-DD`；行内时间 `HH:MM`。用本地时间。
-- **实验 ID**：格式 `EXP-0001`，**四位零填充、单调递增、永不复用**（即使实验被归档）。目录名 `EXP-0001-<slug>`，slug 为小写 kebab-case、≤5 个词、能望文生义。新建时扫描 `experiments/` 取当前最大编号 +1，同时检查 `archive/`，避免复用编号。
-- **文件命名**：文档用英文 kebab-case（`storage-latency-model.md`）；标题可以中文，文件名保持可跨平台稳定。
-- **`remote/`**：摘要一天一份 `YYYY-MM-DD.md`，每次同步追加 `## HH:MM` 小节，不回头改已写小节；`cursor.json` 随同步覆盖。摘要头部必备三行——**范围**（`<旧 sha>..<新 sha>` + 时间区间）、**抓取时间**、**是否降级**。
-- **`outputs/`**：内部结构不设约定，也不要求自带元数据；产物位置记在**一处**，见「为什么产物独立于实验」。
+- **时间戳**：journal 文件名 `YYYY-MM-DD.md`；文档日期看 mtime（需要时正文写 `YYYY-MM-DD`）；行内时间 `HH:MM`。用本地时间。
+- **链接**：文档间引用优先 wiki 形式 `[[从 tmp 根的路径]]`（免 `.md`，可带 `|别名` 与 `#标题`），Markdown 相对链接也接受；两种都由 `check-memory.py` 解析。结论指向 `outputs/` 里的实际路径，不复制粘贴数字。
+- **basename 唯一（限于 `docs/`）**：`docs/` 内文件名不得重复；实验等按路径引用的文件可以重名。裸 basename 命中多份时检查工具报歧义。
+- **实验 ID**：`EXP-0001`，四位零填充、单调递增、**永不复用**（含归档）。目录名 `EXP-0001-<slug>`，slug 小写 kebab-case、≤5 词。新建时扫 `experiments/` 与 `archive/` 取最大编号 +1。
+- **文件命名**：文档用英文 kebab-case（`storage-latency-model.md`）；标题可以中文，文件名保持跨平台稳定。
+- **`remote/`**：一天一份摘要，每次追加 `## HH:MM` 小节；头部必备**范围**、**抓取时间**、**是否降级**三行。
 
 ### 各类文件的结构
 
-结构的价值是**扫一眼就知道去哪找**。字段名不硬性，但小节顺序和存在的小节尽量保持。
+结构的价值是**扫一眼就知道去哪找**；字段名不硬性，但小节顺序尽量保持。
 
-`STATE.md`（覆盖式更新，<150 行）：`## 现在` → `## 进行中` → `## 下一步` → `## 待决 / 阻塞` → `## 关键链接` → `## 已毕业`。
+- `STATE.md`：`## 现在` → `## 进行中` → `## 下一步` → `## 待决 / 阻塞` → `## 关键链接` → `## 已毕业`（骨架见「惰性初始化」）。
+- 实验 `README.md`：`状态` → `问题` → `假设` → `方法` → `结果` → `结论` → `未决` → `运行记录`（每行指向 `outputs/` 实际产物）。初期只填到「方法」，跑完再补结论。
+- `annotated/<topic-slug>`：形态不限——`<slug>.md` 纯讲解、`<slug>.<ext>` 带注释的源码片段、`<slug>/` 主题目录。**硬要求**：从项目源码摘来的代码记来源（路径 + commit/日期），放文件顶部或同目录 README。
+- `docs/` 的演示类内容无独立形态要求——slides、一页纸、demo 脚本、html 成品放文档旁或同目录 `assets/` 即可。
 
-实验 `README.md`：`状态` → `问题` → `假设` → `方法` → `结果` → `结论` → `未决` → `运行记录`（表格，每行指向 `outputs/` 里的实际产物位置）。初期只填到「方法」，跑完再补结论——先开张。
+### 文档 front-matter（极简）
 
-`docs/` 文档：`memory` = 背景 → 决定 → 理由与代价 → 来源；`research` = 一句话 → 正文 → 证据 → 未决；`plan` = 目标 → 方案 → 备选 / 取舍 → 验证方式。
-
-`annotated/<topic-slug>`：形态不限，按内容挑最省事的——`<slug>.md` 纯讲解（代码用代码块嵌在文档里）、`<slug>.<ext>` 带注释的源码片段（注释本身是讲解）、`<slug>/` 主题目录（讲解与代码各一份，或加几个变体 / diff）。**唯一硬要求**：从项目源码摘来的代码记来源（原文件路径 + commit/日期），放文件顶部或同目录 README。
-
-`docs/` 里的演示类内容没有独立形态要求——slides、一页纸、demo 脚本、html 成品直接放对应文档旁或同目录 `assets/`，要不要配 `README.md` 说明给谁看也随意；`docs/` 只沉淀稳定的结论与成品，形式自由。
-
-### 文档 front-matter
-
-所有 `docs/**/*.md` 必带：
+只留一个字段，没有 tag 的文档**不写 front-matter**：
 
 ```yaml
 ---
-title: 标题
-type: memory | research | plan      # 主类型；演示等自由形态的内容填实际形态即可
-status: draft | stable | deprecated
-created: 2026-09-27
-updated: 2026-09-27
-tags: []
-related: [EXP-0001]
+tags: [storage, cache-eviction]
 ---
 ```
 
-`status` 从 `draft` 起步，内容稳定后改 `stable`，过时改 `deprecated`（不直接删）。`related` 用实验 ID 或相对路径，串起"哪些实验产生了这篇结论"。
+原来的 `type` / `status` / `title` / `created` / `related` 字段都不要了：分别看子目录、位置（`docs/` 活、`archive/docs/` 退役）、正文 H1、mtime / git、正文链接。
+
+- **tag 只写 front-matter**，不用行内 `#tag`（代码块里会误报）；小写 kebab-case，一篇 1~3 个，第一个是**主 tag**。
+- **优先复用已有 tag**，避免 `cache` / `caching` / `缓存` 这类同义变体。`check-memory.py` 的「tag 规范」小节会提示大写、非 kebab、超过 3 个、以及词干相近的变体。
+- **退役不靠字段**：正文留一条「被 [[…]] 取代」链接，再整篇移 `archive/docs/`；链接断了下一次检查会报出来。
 
 ### journal 条目
 
@@ -183,57 +235,48 @@ related: [EXP-0001]
 - 15:30 做了什么 / 观察到什么 / 为什么
 ```
 
-一行一条，不要求完整句子，不要求排版；一个文件对应一天，跨天就新建文件；只追加，不回头整理。
+一行一条，不要求完整句子或排版；一个文件对应一天，只追加，不回头整理。
 
 ### `docs/` 的门槛
 
-`docs/` 和 `scratch/` 的区别不是"沉淀程度"，而是**是否值得留**：
+`docs/` 和 `scratch/` 的区别不是“沉淀程度”，而是**是否值得留**：
 
 | | 想留吗 | 组织方式 | 时间性 |
 |---|---|---|---|
 | `scratch/` | 不想（丢了不心疼） | 无 | 当下草稿 |
-| `journal/` | 想留（作为**记录**） | 无，按时间 | 强——"哪天发生的" |
+| `journal/` | 想留（作为**记录**） | 无，按时间 | 强——“哪天发生的” |
 | `docs/` | 想留（作为**知识**） | 有，按主题 | 弱——与时间脱钩 |
 
-进 `docs/` 要同时满足两点：① **时间脱钩**——不知道当时上下文也读得懂，不是流水账；② **有人会来查**——未来的某个决定 / 实验会回头指向它。成熟度用 `status: draft → stable` 表达，**不必等到完全定论**。拿不准就先留 `journal/`。
+进 `docs/` 要同时满足两点：① **时间脱钩**——不知道当时上下文也读得懂；② **有人会来查**——未来的决定 / 实验会回头指向它。不要求完全定论：未成熟可先写并说明局限；拿不准是否值得留的观察先记 `journal/`。
 
 ### 产物元数据（可选）
 
 `outputs/` 不要求自带元数据。若希望产物能自证出处，让程序写一份 sidecar；字段样例见 `references/outputs-metadata.md`。
 
-### 链接与引用
-
-文档之间用相对路径链接，保证在编辑器 / 渲染器里可点。结论指向证据：`docs/` 里引用 `outputs/` 中的实际路径，而不是复制粘贴数字。
-
 ## 惰性初始化（首次写入时）
 
-**没有独立的「初始化」步骤**：只读（冷启动、查资料）不创建任何东西。触发条件是——第一次要**写入** `./tmp/`，且 `./tmp/README.md` 不存在。此时只做下面这套最小动作：
+**没有独立的「初始化」步骤**：只读（冷启动、查资料）不创建任何东西。触发条件：第一次要**写入** `./tmp/`，且 `./tmp/README.md` 不存在。此时只做这套最小动作：
 
-1. 确认当前目录是项目根（`./tmp/` 应建在这里，不是子目录）。
-2. 若 `./tmp/` 已存在但没有 `README.md`，它多半是别的工具 / 旧流程的临时文件，不是这份记忆。**先问用户**——是把旧内容并入 `tmp/scratch/` 后接手，还是用户另想去处；不要默默接手，也别把它们当记忆保护起来。
-3. 确保 `.gitignore` 有 `/tmp/`（见下「项目 `.gitignore` 追加」；已有规则就不重复加）。
-4. 复制 `assets/tmp-readme.md` 成 `./tmp/README.md`（见下）。
+1. 确认当前目录是项目根（`./tmp/` 建在这里，不是子目录）。
+2. 若 `./tmp/` 已存在但没有 `README.md`，先按 `references/migration.md` §2 接管：问用户、并入 `tmp/scratch/` 或挪走，不要默默接手。
+3. 确保 `.gitignore` 有 `/tmp/`；已有规则就不重复加。
+4. 复制 `assets/tmp-readme.md` 成 `./tmp/README.md`。
 5. `./tmp/STATE.md` 落一个最小骨架（见下）。
-6. **只创建这次要写的那条路径**（外加上面的入口文件）；其余目录等用到再建，不要预建一堆空目录。
+6. 复制 `assets/` 下的工具集到 `./tmp/scripts/`（`memory_lib.py` + `check-memory.py` / `find-memory.py` / `index-memory.py` / `index-experiments.py`；有 Python 3 才需要，没有就跳过并在当天 journal 记一句）。skill 更新后 `check-memory.py` 首行的 `toolset N` 会与新版不一致——那说明副本旧了，重新复制即可。
+7. **只创建这次要写的路径**（加上面的入口文件）；其余目录用到再建。
 
-第 3、4 步是**不可逆保护**，不能跳过：少了 `.gitignore`，过程记忆会被提交进版本库、以后 `git clean -fdx` 会连它一起清掉；少了 `README.md`，以后没人知道这个目录不是垃圾。其余都是省事，能省则省。
+第 3、4 步是**不可逆保护**：少了 `.gitignore`，过程记忆会被提交进版本库、以后 `git clean -fdx` 会连它一起清掉；少了 `README.md`，以后没人知道这个目录不是垃圾。
 
-后面三个子节：`README.md` 是整文件复制，`.gitignore` 规则与 `STATE.md` 骨架是**原样落盘**；都不是可随意改写的建议。
-
-### 1. `./tmp/README.md`
-
-原样复制 `assets/tmp-readme.md`。它就是上面「目录结构」的落盘版——改目录结构时两处一起改。
-
-### 2. 项目 `.gitignore` 追加
+### 1. 项目 `.gitignore` 追加
 
 ```gitignore
 # ./tmp —— 过程性记忆，默认不进版本库（整个目录）
 /tmp/
 ```
 
-### 3. `./tmp/STATE.md`（最小骨架）
+### 2. `./tmp/STATE.md`（最小骨架）
 
-入口文件，覆盖式更新。初期就是空的，有内容再往里填：
+入口文件，覆盖式更新；初期就是空的，有内容再填：
 
 ```markdown
 # STATE
