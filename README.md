@@ -57,16 +57,16 @@
 
 ## 其他要点
 
-- **文档约定**：`docs/` 文档只有 H1 + 正文 + `tags` + 引用链接；front-matter 只保留 `tags`（第一个是主 tag）；引用优先 wiki 链接 `[[从 tmp 根的路径]]`（Markdown 相对链接也接受）；`docs/` 内文件名不重复，实验等按路径引用的文件可以重名。
+- **文档约定**：`docs/` 文档只有 H1 + 正文 + `tags` + 引用链接；front-matter 只保留 `tags`（第一个是主 tag）；引用用 Markdown 链接、路径 `./tmp/` 开头（如 `[x](./tmp/docs/research/x.md)`；文件相对写法也认），Obsidian 的 wiki 形式也兼容（`[[./tmp/docs/research/x]]`、`[[docs/research/x]]`、唯一时的 `[[x]]`）；`docs/` 内文件名不重复，实验等按路径引用的文件可以重名。
 - **索引**：`docs/index.md`（知识）与 `experiments/INDEX.md`（实验状态）是生成物，不手改；`archive/INDEX.md`（退役原因）只追加。索引里的“正在关注”按 mtime 推算，是启发式指标。
 - **检查**：`check-memory.py` 一次跑完断链 / 歧义 / 重名 / 孤儿 / 无 tag / tag 规范 / 整理阈值（`--limit 0` 不截断）；`find-memory.py` 查 tag / 无 tag / 孤儿；`index-memory.py`、`index-experiments.py` 生成两个索引。解析结果缓存在 `.memory-cache.json`（按 mtime + size + 活目录归属命中，`--no-cache` 可绕过）。孤儿只是复核线索，不是删除结论。
-- **链接判定**：带 `#锚点` 的 Markdown 链接、指向目录的链接、Windows / macOS 上大小写不一致的 wiki 链接都算有效；`journal/`、`remote/`、`archive/`、`scratch/` 里的链接不计入入链，也不报断链。
+- **链接判定**：带 `#锚点` 的 Markdown 链接、指向目录的链接、`./tmp/` 开头（从项目根看）与文件相对两种写法、Windows / macOS 上大小写不一致的 wiki 链接都算有效；wiki 目标的 `./`、`tmp/` 前缀会先剥掉再按 tmp 根解析（`[[./tmp/docs/x]]` 与 `[[docs/x]]` 等价）；`journal/`、`remote/`、`archive/`、`scratch/` 里的链接不计入入链，也不报断链。
 - **整理**：目录条目 ≥16（软）/ ≥20（硬）、`journal/` 活跃月份 >2 时提示——`check-memory.py` 的「整理」小节直接给数，不用手动数；旧整月滚到 `archive/`，退役文档移 `archive/docs/`，每次归档在 `archive/INDEX.md` 追加一行——移动，不删。
 - **写入协议**、**惰性初始化的落盘模板**（`assets/tmp-readme.md`）、**实验 ID / journal 格式**见 `SKILL.md`；多 agent 协作见 `references/multi-agent.md`。
 - **毕业 / 接管既有 tmp / 旧版 front-matter 迁移**见 `references/migration.md`。
 - **远程增量同步**（`remote/` 的 cursor 字段、`git` / `gh` 命令、摘要模板、坑）见 `references/remote-sync.md`。
 - `docs/` 的门槛：进 `docs/` 要同时满足 ① 时间脱钩（不知道上下文也读得懂）、② 有人会来查。拿不准就先留 `journal/`。
-- 链接优先用 wiki，Markdown 相对路径也可以；结论指向 `outputs/` 里的实际路径，而不是复制粘贴数字。
+- 链接优先用 Markdown 相对链接（wiki 形式也认）；结论指向 `outputs/` 里的实际路径，而不是复制粘贴数字。
 
 ## 维护与同步
 

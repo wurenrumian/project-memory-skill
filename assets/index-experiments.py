@@ -78,8 +78,9 @@ def build(root: str, rows) -> str:
     ]
     if rows:
         for exp_id, name, link, status, question, conclusion, mtime in rows:
+            # 与文档链接同一约定：Markdown 链接、路径 ./tmp/ 开头。
             lines.append(
-                f"| [[{link}\\|{exp_id}]] | {status} | {question} | {conclusion} | {fmt_date(mtime)} |"
+                f"| [{exp_id}](./tmp/{link}.md) | {status} | {question} | {conclusion} | {fmt_date(mtime)} |"
             )
     else:
         lines.append("| — | — | — | — | — |")

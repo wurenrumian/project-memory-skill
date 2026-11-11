@@ -71,6 +71,8 @@ def main():
             out,
         )
         check("check：指目录的链接不算断链", "../research/" not in out, out)
+        check("check：./tmp/ 开头的 md 链接不算断链", "./tmp/docs/memory/cache-shard.md" not in out, out)
+        check("check：./tmp/ 开头的 wiki 链接不算断链", "./tmp/docs/research/latency-notes" not in out, out)
         if sys.platform in ("win32", "darwin"):
             check("check：大小写不一致的 wiki 链接能解析", "Cache-Shard" not in out, out)
 
@@ -156,6 +158,11 @@ def main():
         check("index：退出码为 0", r.returncode == 0, r.stdout + r.stderr)
         check("index：含关注面", "正在关注" in text and "**storage**" in text, text)
         check("index：含全量分组", "### storage" in text, text)
+        check(
+            "index：文档链接写成 ./tmp/ 开头的 Markdown 链接",
+            "(./tmp/docs/memory/cache-shard.md)" in text,
+            text,
+        )
 
         r = run(INDEX_EXP, vault)
         exp_index = os.path.join(vault, "experiments", "INDEX.md")
@@ -167,6 +174,11 @@ def main():
         check(
             "experiments index：按 ID 排序",
             exp_text.find("EXP-0001") < exp_text.find("EXP-0002") < exp_text.find("EXP-0003"),
+            exp_text,
+        )
+        check(
+            "experiments index：链接写成 ./tmp/ 开头的 Markdown 链接",
+            "(./tmp/experiments/EXP-0001-cache-test/README.md)" in exp_text,
             exp_text,
         )
 

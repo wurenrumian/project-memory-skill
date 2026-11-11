@@ -32,11 +32,11 @@
 |---|---|
 | `tags` | 保留；重排成 1~3 个，第一个是主 tag |
 | `type` | 删；看它所在的子目录 |
-| `status: deprecated` | 删；正文加一条「被 [[…]] 取代」链接，整篇移 `archive/docs/` |
+| `status: deprecated` | 删；正文加一条「被 … 取代」的 Markdown 链接（`./tmp/…`），整篇移 `archive/docs/` |
 | `status: draft / stable` | 删；位置即状态 |
 | `title` | 删；保留正文 H1 |
 | `created / updated` | 删；mtime / git 承担 |
-| `related: [EXP-0001, …]` | 展开成正文「引用」节的 wiki 链接，裸 ID 不留 |
+| `related: [EXP-0001, …]` | 展开成正文「引用」节的 Markdown 链接（`./tmp/…`），裸 ID 不留 |
 
 迁移后：
 

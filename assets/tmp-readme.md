@@ -43,7 +43,7 @@
 
 - `docs/` 文档只有三种手写内容：**H1 标题、正文、`tags`**；没有 status / title / date 字段——位置就是状态（`docs/` 活、`archive/docs/` 退役）。
 - `tags` 只写 front-matter，1~3 个，小写 kebab-case，**第一个是主 tag**；没有 tag 就不写 front-matter。
-- 引用优先写成 wiki 链接 `[[从 tmp 根的路径]]`（Markdown 相对链接也接受；带 `#标题` 锚点、指向目录都行），不写裸 ID；文末可放一节「引用」集中列出。
+- 引用写成 Markdown 链接、路径 `./tmp/` 开头（如 `[延迟笔记](./tmp/docs/research/latency-notes.md)`；文件相对写法也认；带 `#标题` 锚点、指向目录都行），不写裸 ID；文末可放一节「引用」集中列出。
 - `docs/` 内文档文件名不得重复；实验等按目录路径引用的文件可以重名。裸 basename 链接命中多个文件时，检查工具会报歧义。
 - `docs/index.md`、`experiments/INDEX.md` 是生成物，不手改；`archive/INDEX.md` 只追加。
 - `.memory-cache.json` 是增量缓存，可随时删；`--no-cache` 强制全量解析。

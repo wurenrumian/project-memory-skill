@@ -36,7 +36,7 @@ TIDY_MAX_LISTED = 40
 
 CACHE_FILE = ".memory-cache.json"
 CACHE_VERSION = 2  # 解析逻辑 / 缓存字段变了就 +1，旧缓存自动失效
-TOOLSET_VERSION = 1  # tmp/scripts/ 里的副本可能比 skill 旧；check 首行会打印
+TOOLSET_VERSION = 2  # tmp/scripts/ 里的副本可能比 skill 旧；check 首行会打印
 
 CASE_INSENSITIVE = os.name == "nt" or sys.platform == "darwin"
 
@@ -289,6 +289,31 @@ def scan(root: str, use_cache: bool = True):
     return docs, changed
 
 
+def path_variants(p: str):
+    """链接路径的候选写法：原样、去 `./`、再去 `tmp/`。
+
+    约定是 Markdown 链接写成 `./tmp/docs/x.md`（从项目根看）；但真正按文件相对写的
+    `../research/x.md` 也常见，所以两种都试——文件相对优先，其次按 tmp 根。
+    """
+    normed = p.replace("\\", "/")
+    while normed.startswith("./"):
+        normed = normed[2:]
+    seen = []
+    for cand in (p, normed, normed[4:] if normed.lower().startswith("tmp/") else ""):
+        if cand and cand not in seen:
+            seen.append(cand)
+            yield cand
+
+
+def wiki_variants(t: str):
+    """wiki 目标的候选写法：原样、去 `./`、再去 `tmp/`。
+
+    写链接的人常从项目根看路径（`[[./tmp/docs/x]]`），而解析根是 tmp 本身，
+    所以前缀要剥掉再试；`[[docs/x]]`、`[[x]]` 这类旧写法原样就能命中。
+    """
+    yield from path_variants(t)
+
+
 def resolve_all(root: str, docs):
     """返回 (broken, ambiguous, inbound)。全部用字典，避免 O(n²)。"""
     stem_map = {}
@@ -304,6 +329,27 @@ def resolve_all(root: str, docs):
     broken, ambiguous = [], []
     inbound = {p: 0 for p in docs}
 
+    def resolve_wiki(t):
+        """返回 ("ok", 路径) / ("ambiguous", [路径]) / ("broken", None)。"""
+        has_ext = bool(os.path.splitext(t)[1])
+        if "/" in t or has_ext:
+            cand = os.path.normpath(os.path.join(root, t if has_ext else t + ".md"))
+            if cand in docs or os.path.isfile(cand) or os.path.isdir(cand):
+                return "ok", cand
+            if "/" in t and not has_ext:
+                cand2 = os.path.normpath(os.path.join(root, t))
+                if cand2 in docs or os.path.isdir(cand2):
+                    return "ok", cand2
+            return "broken", None
+        hits = stem_map.get(t, [])
+        if not hits and CASE_INSENSITIVE:
+            hits = stem_lower.get(t.lower(), [])
+        if len(hits) == 1:
+            return "ok", hits[0]
+        if len(hits) > 1:
+            return "ambiguous", hits
+        return "broken", None
+
     for src, doc in docs.items():
         for kind, target in doc.raw_links:
             target = target.strip()
@@ -312,29 +358,16 @@ def resolve_all(root: str, docs):
                 t = target.split("|", 1)[0].split("#", 1)[0].strip().lstrip("/")
                 if not t:
                     continue
-                has_ext = bool(os.path.splitext(t)[1])
-                if "/" in t or has_ext:
-                    cand = os.path.normpath(os.path.join(root, t if has_ext else t + ".md"))
-                    if cand in docs or os.path.isfile(cand) or os.path.isdir(cand):
-                        if cand in inbound and doc.active:
-                            inbound[cand] += 1
-                        continue
-                    if "/" in t and not has_ext:
-                        cand2 = os.path.normpath(os.path.join(root, t))
-                        if cand2 in docs or os.path.isdir(cand2):
-                            if doc.active:
-                                inbound[cand2] += 1
-                            continue
-                    broken.append((src, target))
-                    continue
-                hits = stem_map.get(t, [])
-                if not hits and CASE_INSENSITIVE:
-                    hits = stem_lower.get(t.lower(), [])
-                if len(hits) == 1:
-                    if doc.active:
-                        inbound[hits[0]] += 1
-                elif len(hits) > 1:
-                    ambiguous.append((src, target, [docs[h].relpath for h in hits]))
+                for variant in wiki_variants(t):
+                    status, value = resolve_wiki(variant)
+                    if status == "ok":
+                        # 指向目录 / 不在索引里的目标（outputs/ 等）不算入链，但也不报断链。
+                        if doc.active and value in inbound:
+                            inbound[value] += 1
+                        break
+                    if status == "ambiguous":
+                        ambiguous.append((src, target, [docs[h].relpath for h in value]))
+                        break
                 else:
                     broken.append((src, target))
             else:
@@ -344,15 +377,20 @@ def resolve_all(root: str, docs):
                 path_part = unquote(target.split("#", 1)[0].split("?", 1)[0])
                 if not path_part:
                     continue
-                cand = os.path.normpath(os.path.join(os.path.dirname(src), path_part))
-                # 先查字典：链接到的 md 文档本来就在 docs 里，不必再问一次文件系统。
-                if cand not in docs and not os.path.exists(cand):
-                    alt = os.path.normpath(os.path.join(root, path_part))
-                    cand = alt if (alt in docs or os.path.exists(alt)) else ""
-                if not cand:
+                found = ""
+                for variant in path_variants(path_part):
+                    cand = os.path.normpath(os.path.join(os.path.dirname(src), variant))
+                    if cand in docs or os.path.exists(cand):
+                        found = cand
+                        break
+                    alt = os.path.normpath(os.path.join(root, variant))
+                    if alt in docs or os.path.exists(alt):
+                        found = alt
+                        break
+                if not found:
                     broken.append((src, target))
-                elif cand in inbound and doc.active:
-                    inbound[cand] += 1
+                elif doc.active and found in inbound:
+                    inbound[found] += 1
 
     return broken, ambiguous, inbound
 

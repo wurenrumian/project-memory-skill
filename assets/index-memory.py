@@ -66,7 +66,8 @@ def build_index(a) -> str:
         lines.append(f"### {tag}")
         lines.append("")
         for d in groups[tag]:
-            link = f"[[{os.path.splitext(d.relpath)[0]}]]"
+            # 约定写法：从项目根看，路径以 ./tmp/ 开头；解析器两种都认。
+            link = f"[{os.path.splitext(d.relpath)[0]}](./tmp/{d.relpath})"
             extra = f" · 入链 {a.inbound.get(d.path, 0)} · {fmt_date(d.mtime)}"
             lines.append(f"- {link} — {d.summary}{extra}")
         lines.append("")

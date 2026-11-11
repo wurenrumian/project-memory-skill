@@ -127,7 +127,7 @@ description: 在项目根的 ./tmp/ 下维护项目记忆、实验记录与当�
 **`docs/index.md`（生成，不手改）**：
 
 - 「正在关注」：近 30 天有**文件活动**的 tag，按最近活跃排序，带文档数、最近日期、入链数——工作区最近在碰什么的启发式视图；
-- 「全部文档」：按主 tag（第一个 tag）分组，每篇一行：wiki 链接 + 首段首句 + 入链数 + 最后更新。
+- 「全部文档」：按主 tag（第一个 tag）分组，每篇一行：文档链接 + 首段首句 + 入链数 + 最后更新。
 
 > mtime 受复制、解压、checkout 影响，所以“正在关注”是启发式，不代表主题重要性或人工关注状态。
 
@@ -148,7 +148,7 @@ python tmp/scripts/index-memory.py               # 生成 docs/index.md
 python tmp/scripts/index-experiments.py          # 生成 experiments/INDEX.md
 ```
 
-首行的 `toolset N` 是工具集版本，当前是 **toolset 1**；与 `assets/` 里 `memory_lib.py` 的 `TOOLSET_VERSION` 不一致，说明项目里的 `tmp/scripts/` 是旧副本，重新复制一次。
+首行的 `toolset N` 是工具集版本，当前是 **toolset 2**；与 `assets/` 里 `memory_lib.py` 的 `TOOLSET_VERSION` 不一致，说明项目里的 `tmp/scripts/` 是旧副本，重新复制一次。
 
 **增量缓存**：解析结果存在 `tmp/.memory-cache.json`，按 `mtime + size + 活目录归属` 命中，三个命令共享；可随时删，`--no-cache` 强制全量解析。缓存文件不参与检查。
 
@@ -157,7 +157,7 @@ python tmp/scripts/index-experiments.py          # 生成 experiments/INDEX.md
 - 入链只算活引用（`docs/`、`experiments/`、`annotated/`、`STATE.md`）；`journal/`、`remote/`、`archive/`、`scratch/` 既不算入链，也不报断链——它们只追加、不回头整理，报出来也修不了；
 - **孤儿** = 入链 0 且 mtime 超过 30 天的 `docs/` 文档，只是复核线索，不是“该删”的结论；
 - `docs/index.md` 自身不参与检查（否则它列出的每条链接都会变成入链）；
-- 链接按文件系统语义判定：Markdown 链接的 `#锚点` / `?query` 不算路径；指向目录的链接、大小写不一致的 wiki 链接（Windows / macOS）都算有效。
+- 链接按文件系统语义判定：Markdown 链接的 `#锚点` / `?query` 不算路径；路径先按文件相对试、再按 tmp 根试（`./tmp/docs/x.md` 与 `../research/x.md` 都算数），指向目录的链接、大小写不一致的 wiki 链接（Windows / macOS）都算有效。
 
 有 Obsidian 1.12+ CLI 的人可以用 `obsidian unresolved` / `orphans` / `backlinks` 人工复核；它需要 app 在运行，脚本是无头等价物。
 
@@ -199,7 +199,7 @@ python tmp/scripts/index-experiments.py          # 生成 experiments/INDEX.md
 ## 格式约定
 
 - **时间戳**：journal 文件名 `YYYY-MM-DD.md`；文档日期看 mtime（需要时正文写 `YYYY-MM-DD`）；行内时间 `HH:MM`。用本地时间。
-- **链接**：文档间引用优先 wiki 形式 `[[从 tmp 根的路径]]`（免 `.md`，可带 `|别名` 与 `#标题`），Markdown 相对链接也接受；两种都由 `check-memory.py` 解析。结论指向 `outputs/` 里的实际路径，不复制粘贴数字。
+- **链接**：文档间引用用 **Markdown 链接**，路径从项目根写、以 `./tmp/` 开头：`[延迟笔记](./tmp/docs/research/latency-notes.md)`——不用管当前文件在哪一层，人和 agent 都能直接定位。按文件相对写（`[x](../research/x.md)`）也照样解析，且优先按文件相对解析。Obsidian 习惯的 wiki 形式 `[[…]]` 保留兼容：`[[./tmp/docs/research/x]]` 与 `[[docs/research/x]]` 等价（`./`、`tmp/` 前缀会剥掉），`[[x]]` 裸 basename 只在唯一时有效。两种都可带 `#标题` 锚点与别名，都由 `check-memory.py` 解析。结论指向 `outputs/` 里的实际路径，不复制粘贴数字。
 - **basename 唯一（限于 `docs/`）**：`docs/` 内文件名不得重复；实验等按路径引用的文件可以重名。裸 basename 命中多份时检查工具报歧义。
 - **实验 ID**：`EXP-0001`，四位零填充、单调递增、**永不复用**（含归档）。目录名 `EXP-0001-<slug>`，slug 小写 kebab-case、≤5 词。新建时扫 `experiments/` 与 `archive/` 取最大编号 +1。
 - **文件命名**：文档用英文 kebab-case（`storage-latency-model.md`）；标题可以中文，文件名保持跨平台稳定。
@@ -228,7 +228,7 @@ tags: [storage, cache-eviction]
 
 - **tag 只写 front-matter**，不用行内 `#tag`（代码块里会误报）；小写 kebab-case，一篇 1~3 个，第一个是**主 tag**。
 - **优先复用已有 tag**，避免 `cache` / `caching` / `缓存` 这类同义变体。`check-memory.py` 的「tag 规范」小节会提示大写、非 kebab、超过 3 个、以及词干相近的变体。
-- **退役不靠字段**：正文留一条「被 [[…]] 取代」链接，再整篇移 `archive/docs/`；链接断了下一次检查会报出来。
+- **退役不靠字段**：正文留一条「被 … 取代」的链接，再整篇移 `archive/docs/`；链接断了下一次检查会报出来。
 
 ### journal 条目
 
