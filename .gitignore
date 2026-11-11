@@ -1,0 +1,5 @@
+__pycache__/
+*.py[cod]
+*.tmp
+# 检查工具的增量缓存：在 tests/tmp/ 上直接跑脚本时不该被提交
+.memory-cache.json
